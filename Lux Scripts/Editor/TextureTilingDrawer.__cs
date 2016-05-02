@@ -1,0 +1,34 @@
+﻿using UnityEngine;
+using System.Collections;
+using UnityEditor;
+
+public class Lux_TextureTilingDrawer : MaterialPropertyDrawer {
+	override public void OnGUI (Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+	{
+		Vector4 vec4value = prop.vectorValue;
+		Vector2 tiling = new Vector2 (vec4value.x, vec4value.y);
+		Vector2 offset = new Vector2 (vec4value.z, vec4value.w);
+
+		GUILayout.Space(-4);
+		EditorGUI.BeginChangeCheck();
+		EditorGUILayout.BeginVertical();
+			EditorGUILayout.BeginHorizontal();
+				GUILayout.Label("Lux Tiling", GUILayout.Width(80));
+				tiling = EditorGUILayout.Vector2Field("", tiling);
+			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginHorizontal();
+				GUILayout.Label("Lux Offset", GUILayout.Width(80));
+				offset = EditorGUILayout.Vector2Field("", offset);
+			EditorGUILayout.EndHorizontal();
+		EditorGUILayout.EndVertical();
+		GUILayout.Space(4);
+		if (EditorGUI.EndChangeCheck ()) {
+			prop.vectorValue = new Vector4(tiling.x, tiling.y, offset.x, offset.y);
+		}
+	}
+
+	public override float GetPropertyHeight (MaterialProperty prop, string label, MaterialEditor editor)
+	{
+		return 0; //base.GetPropertyHeight (prop, label, editor);
+	}
+}
