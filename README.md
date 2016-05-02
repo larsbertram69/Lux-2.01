@@ -15,3 +15,6 @@ Surface Feature
 - Dynamic Weather including water/wetness and snow
 - Mix Mapping: Unlike unity’s built in detail mapping mix mapping allows you to blend between 2 different texture sets either controlled using vertex colors or texture input and takes the height per pixel into account if present to calculate the final blending result.
 - Parallax Mapping and Parallax Occlusion Mapping
+
+Full documentation:
+https://docs.google.com/document/d/19LM0qbnUSrdgR_Eb5eWTBLbPfiEAoM2jijPV_-7GZKg/edit?usp=sharing
