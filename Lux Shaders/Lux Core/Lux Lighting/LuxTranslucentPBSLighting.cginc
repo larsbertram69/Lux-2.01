@@ -179,7 +179,7 @@ inline half4 LightingLuxTranslucentSpecular (SurfaceOutputLuxTranslucentSpecular
 		lightScattering = wrappedNdotL * GGX * s.Translucency * gi.light.color * lerp(s.Shadow, 1, _Lux_Transluclent_NdotL_Shadowstrength) ;
 	}
 	UNITY_BRANCH
-	if (s.ScatteringPower > 0.0) {
+	if (s.ScatteringPower > 0.001) {
 		//	https://colinbarrebrisebois.com/2012/04/09/approximating-translucency-revisited-with-simplified-spherical-gaussian/
 		half3 transLightDir = diffuseLightDir + diffuseNormal * _Lux_Tanslucent_Settings.x;
 		half transDot = dot( -transLightDir, viewDir );

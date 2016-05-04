@@ -60,6 +60,7 @@ half _DiffuseScatteringContraction;
 //  Translucent Lighting
 #if defined (LOD_FADE_PERCENTAGE)
     half4 _Lux_Tanslucent_Settings;
+    half _Lux_Transluclent_NdotL_Shadowstrength;
     half _TranslucencyStrength;
     half _ScatteringPower;
 #endif

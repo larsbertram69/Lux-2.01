@@ -40,7 +40,7 @@ public class LuxSetup : MonoBehaviour {
     public float Power_S = 2.0f;
     [CustomLabelRange(0.0f,1.0f,"Distortion")]
     public float Distortion_S = 0.1f;
-    [CustomLabelRange(1.0f,8.0f, "Scale")]
+    [CustomLabelRange(0.0f,8.0f, "Scale")]
 	public float Scale_S = 2.0f;
 
     [Space(5)]

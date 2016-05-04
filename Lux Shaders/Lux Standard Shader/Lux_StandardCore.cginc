@@ -787,18 +787,18 @@ half4 fragForwardBase (VertexOutputForwardBase i
 	#if defined (LOD_FADE_PERCENTAGE)
 		half3 lightScattering = 0;
 		UNITY_BRANCH
-		if (s.scatteringPower == 0.0) {
+		if (s.scatteringPower < 0.001) {
 			half wrap = 0.5;
 			half wrappedNdotL = saturate( ( dot(-diffuseNormal, diffuseLightDir) + wrap ) / ( (1 + wrap) * (1 + wrap) ) );
 			half VdotL = saturate( dot(viewDir, -diffuseLightDir) );
 			half a2 = 0.7 * 0.7;
 			half d = ( VdotL * a2 - VdotL ) * VdotL + 1;
 			half GGX = (a2 / UNITY_PI) / (d * d);
-			lightScattering = wrappedNdotL * GGX * s.translucency * gi.light.color * lerp(shadow, 1, _Lux_Tanslucent_Settings.z) ;
+			lightScattering = wrappedNdotL * GGX * s.translucency * gi.light.color * lerp(shadow, 1, _Lux_Transluclent_NdotL_Shadowstrength);
 			c.rgb += lightScattering * s.diffColor * _Lux_Tanslucent_Settings.w;
 		}
 		UNITY_BRANCH
-		if (s.scatteringPower > 0.0) {
+		if (s.scatteringPower > 0.001) {
 			//	https://colinbarrebrisebois.com/2012/04/09/approximating-translucency-revisited-with-simplified-spherical-gaussian/
 			half3 transLightDir = diffuseLightDir + diffuseNormal * _Lux_Tanslucent_Settings.x;
 			half transDot = dot( -transLightDir, viewDir );
@@ -975,18 +975,18 @@ half4 fragForwardAdd (VertexOutputForwardAdd i
 	#if defined (LOD_FADE_PERCENTAGE)
 		half3 lightScattering = 0;
 		UNITY_BRANCH
-		if (s.scatteringPower == 0.0) {
+		if (s.scatteringPower < 0.001) {
 			half wrap = 0.5;
 			half wrappedNdotL = saturate( ( dot(-diffuseNormal, diffuseLightDir) + wrap ) / ( (1 + wrap) * (1 + wrap) ) );
 			half VdotL = saturate( dot(viewDir, -diffuseLightDir) );
 			half a2 = 0.7 * 0.7;
 			half d = ( VdotL * a2 - VdotL ) * VdotL + 1;
 			half GGX = (a2 / UNITY_PI) / (d * d);
-			lightScattering = wrappedNdotL * GGX * s.translucency * light.color * lerp(shadow, 1, _Lux_Tanslucent_Settings.z);
+			lightScattering = wrappedNdotL * GGX * s.translucency * light.color * lerp(shadow, 1, _Lux_Transluclent_NdotL_Shadowstrength);
 			c.rgb += lightScattering * s.diffColor * _Lux_Tanslucent_Settings.w;
 		}
 		UNITY_BRANCH
-		if (s.scatteringPower > 0.0) {
+		if (s.scatteringPower > 0.001) {
 			//	https://colinbarrebrisebois.com/2012/04/09/approximating-translucency-revisited-with-simplified-spherical-gaussian/
 			half3 transLightDir = diffuseLightDir + diffuseNormal * _Lux_Tanslucent_Settings.x;
 			half transDot = dot( -transLightDir, viewDir );
