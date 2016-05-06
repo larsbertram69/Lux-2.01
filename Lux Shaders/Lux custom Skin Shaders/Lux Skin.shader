@@ -1,4 +1,4 @@
-﻿Shader "Lux/Human/Skin Deferred" {
+﻿Shader "Lux/Human/Skin" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB) Smoothness (A)", 2D) = "white" {}
