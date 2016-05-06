@@ -138,7 +138,8 @@ Shader "Lux Standard (Metallic setup)"
 			
 			// -------------------------------------
 					
-			#pragma shader_feature _NORMALMAP
+			//	#pragma shader_feature _NORMALMAP
+			#define _NORMALMAP
 			#pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
 			#pragma shader_feature _EMISSION
 			#pragma shader_feature _METALLICGLOSSMAP
@@ -172,11 +173,12 @@ Shader "Lux Standard (Metallic setup)"
 			#pragma multi_compile __ LUX_AREALIGHTS
 			
 			#pragma multi_compile_fwdbase
-			#pragma multi_compile_fog
+			//#pragma multi_compile_fog
 
 			#pragma vertex vertForwardBase
 			#pragma fragment fragForwardBase
 
+			#define LUX_STANDARDSHADER
 			#include "../Lux Core/Lux Config.cginc"
 			#include "Lux_StandardCore.cginc"
 
@@ -202,7 +204,8 @@ Shader "Lux Standard (Metallic setup)"
 			// -------------------------------------
 
 			
-			#pragma shader_feature _NORMALMAP
+			//	#pragma shader_feature _NORMALMAP
+			#define _NORMALMAP
 			#pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
 			#pragma shader_feature _METALLICGLOSSMAP
 			#pragma shader_feature ___ _DETAIL_MULX2
@@ -235,11 +238,12 @@ Shader "Lux Standard (Metallic setup)"
 			#pragma multi_compile __ LUX_AREALIGHTS
 			
 			#pragma multi_compile_fwdadd_fullshadows
-			#pragma multi_compile_fog
+			//#pragma multi_compile_fog
 
 			#pragma vertex vertForwardAdd
 			#pragma fragment fragForwardAdd
 
+			#define LUX_STANDARDSHADER
 			#include "../Lux Core/Lux Config.cginc"
 			#include "Lux_StandardCore.cginc"
 
@@ -282,6 +286,7 @@ Shader "Lux Standard (Metallic setup)"
 			#pragma vertex vertShadowCaster
 			#pragma fragment fragShadowCaster
 
+			#define LUX_STANDARDSHADER
 			#include "../Lux Core/Lux Config.cginc"
 			#include "LuxStandardShadow.cginc"
 
@@ -303,7 +308,8 @@ Shader "Lux Standard (Metallic setup)"
 
 			// -------------------------------------
 
-			#pragma shader_feature _NORMALMAP
+			//	#pragma shader_feature _NORMALMAP
+			#define _NORMALMAP
 			#pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
 			#pragma shader_feature _EMISSION
 			#pragma shader_feature _METALLICGLOSSMAP
@@ -340,6 +346,7 @@ Shader "Lux Standard (Metallic setup)"
 			#pragma vertex vertDeferred
 			#pragma fragment fragDeferred
 
+			#define LUX_STANDARDSHADER
 			#include "../Lux Core/Lux Config.cginc"
 			#include "Lux_StandardCore.cginc"
 
@@ -383,6 +390,7 @@ Shader "Lux Standard (Metallic setup)"
 			// Snow
 			#pragma shader_feature _ _SNOW
 
+			#define LUX_STANDARDSHADER
 			#include "../Lux Core/Lux Config.cginc"
 			#include "LuxStandardMeta.cginc"
 			ENDCG

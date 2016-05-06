@@ -4,7 +4,8 @@
 #include "UnityCG.cginc"
 #include "UnityShaderVariables.cginc"
 #include "UnityStandardConfig.cginc"
-#include "UnityStandardInput.cginc"
+//#include "UnityStandardInput.cginc"
+#include "../Lux Core/Lux Setup/LuxInputs.cginc"
 #include "UnityPBSLighting.cginc"
 #include "UnityStandardUtils.cginc"
 #include "UnityStandardBRDF.cginc"
@@ -14,29 +15,6 @@
 #include "../Lux Core/Lux Utils/LuxUtils.cginc"
 #include "../Lux Core/Lux BRDFs/LuxStandardBRDF.cginc"
 #include "../Lux Core/Lux Lighting/LuxAreaLights.cginc"
-
-
-//-------------------------------------------------------------------------------------
-// counterpart for NormalizePerPixelNormal
-// skips normalization per-vertex and expects normalization to happen per-pixel
-half3 NormalizePerVertexNormal (half3 n)
-{
-	#if (SHADER_TARGET < 30) || UNITY_STANDARD_SIMPLE
-		return normalize(n);
-	#else
-		return n; // will normalize per-pixel instead
-	#endif
-}
-
-half3 NormalizePerPixelNormal (half3 n)
-{
-	#if (SHADER_TARGET < 30) || UNITY_STANDARD_SIMPLE
-		return n;
-	#else
-		return normalize(n);
-	#endif
-}
-
 
 // We include thes files here as the rely on the functions above.
 #include "../Lux Core/Lux Setup/LuxStructs.cginc"

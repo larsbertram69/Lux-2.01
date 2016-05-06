@@ -9,7 +9,8 @@
 #define UNITY_PASS_META 1
 
 #include "UnityCG.cginc"
-#include "UnityStandardInput.cginc"
+//#include "UnityStandardInput.cginc"
+#include "../Lux Core/Lux Setup/LuxInputs.cginc"
 
 //#include "../Lux Core/Lux Setup/LuxStructs.cginc"
 //#include "../Lux Core/Lux Setup/LuxInputs.cginc"

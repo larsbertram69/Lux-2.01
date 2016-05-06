@@ -53,8 +53,7 @@ void LuxTessellationDisplace (inout appdata v)
     float3 binormal = cross( v.normal, v.tangent.xyz ) * v.tangent.w;
     float3x3 rotation = float3x3( v.tangent.xyz, binormal, v.normal.xyz );
     // Store FlowDirection
-    v.color.rg = normalize( mul(rotation, mul(_World2Object, float4(0,1,0,0)).xyz) ).xy;
-    v.color.a = d;
+    v.color.rg = normalize( mul(rotation, mul(_World2Object, float4(0,1,0,0)).xyz)).xy;
 }
 
 void LuxTessellationDisplaceMixMapped (inout appdata v) 
