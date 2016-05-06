@@ -173,14 +173,14 @@ half4 fragShadowCaster (
 	#ifdef UNITY_STANDARD_USE_SHADOW_OUTPUT_STRUCT
 	VertexOutputShadowCaster i
 	#endif
+	#ifdef UNITY_STANDARD_USE_DITHER_MASK
+	, UNITY_VPOS_TYPE vpos : VPOS
+	#endif
 	#if defined (UNITY_STANDARD_USE_SHADOW_OUTPUT_STRUCT) && defined (EFFECT_HUE_VARIATION)
-		,
+	,
 	#endif
 	#if defined(EFFECT_HUE_VARIATION)
 		float facing : VFACE 
-	#endif
-	#ifdef UNITY_STANDARD_USE_DITHER_MASK
-	, UNITY_VPOS_TYPE vpos : VPOS
 	#endif
 	) : SV_Target
 {
