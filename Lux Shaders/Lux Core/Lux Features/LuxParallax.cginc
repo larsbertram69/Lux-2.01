@@ -40,6 +40,11 @@ void Lux_Parallax (
                 float2 BaseToDetailFactor = i_tex.zw/i_tex.xy;
                 offset = ParallaxOffset1Step (height, _Parallax, viewDir);
                 i_tex += float4(offset, offset * BaseToDetailFactor) / _ParallaxTiling;
+                // Get final height
+                #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
+                    heightAndPuddleMask = tex2D (_ParallaxMap, i_tex.xy * _ParallaxTiling).gr;
+                    height = heightAndPuddleMask.x;
+                #endif
             #endif
             puddleMaskValue = heightAndPuddleMask.y;
         // Mix Mapping
@@ -66,10 +71,16 @@ void Lux_Parallax (
             mixmapValue *= mixmapValue;
             mixmapValue *= mixmapValue;
             mixmapValue = mixmapValue / dot(mixmapValue, 1);
-            height = dot(mixmapValue, h);
+            height = dot(mixmapValue, h.xy);
             #if !defined(TESSELLATION_ON)
                 offset = ParallaxOffset1Step (height, _Parallax, viewDir);
                 i_tex += float4(offset, offset) / _ParallaxTiling;
+                // Get final height
+                #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
+                    half4 h1 = tex2D (_ParallaxMap, i_tex.xy * _ParallaxTiling);
+                    h1.a = tex2D (_ParallaxMap, i_tex.zw * _ParallaxTiling).a;
+                    height = dot(mixmapValue, h1.ga);
+                #endif
             #endif
             puddleMaskValue = h.z;
         #endif
