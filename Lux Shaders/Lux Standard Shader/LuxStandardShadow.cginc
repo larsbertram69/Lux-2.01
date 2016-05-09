@@ -263,14 +263,20 @@ half4 fragShadowCaster (
 			clip (alpha - _Cutoff);
 		#endif
 		#if defined(_ALPHABLEND_ON) || defined(_ALPHAPREMULTIPLY_ON)
+		
 			#if defined(UNITY_STANDARD_USE_DITHER_MASK)
 				// Use dither mask for alpha blended shadows, based on pixel position xy
 				// and alpha level. Our dither texture is 4x4x16.
 				half alphaRef = tex3D(_DitherMaskLOD, float3(vpos.xy*0.25,alpha*0.9375)).a;
+
+					// We have to distinguish between depth and shadow pass (forward rendering) / unity_LightShadowBias is (0,0,0,0) when rendering depth in forward
+				//	alphaRef = ( dot(unity_LightShadowBias, 1.0) == 0.0 ) ? 1.0 : alphaRef;
+
 				clip (alphaRef - 0.01);
 			#else
 				clip (alpha - _Cutoff);
 			#endif
+		
 		#endif
 	#endif // #if defined(UNITY_STANDARD_USE_SHADOW_UVS)
 

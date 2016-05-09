@@ -77,9 +77,9 @@ void Lux_Parallax (
                 i_tex += float4(offset, offset) / _ParallaxTiling;
                 // Get final height
                 #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
-                    half4 h1 = tex2D (_ParallaxMap, i_tex.xy * _ParallaxTiling);
-                    h1.a = tex2D (_ParallaxMap, i_tex.zw * _ParallaxTiling).a;
-                    height = dot(mixmapValue, h1.ga);
+                    half2 h1 = tex2D (_ParallaxMap, i_tex.xy * _ParallaxTiling).ga;
+                    h1.y = tex2D (_ParallaxMap, i_tex.zw * _ParallaxTiling).a;
+                    height = dot(mixmapValue, h1);
                 #endif
             #endif
             puddleMaskValue = h.z;

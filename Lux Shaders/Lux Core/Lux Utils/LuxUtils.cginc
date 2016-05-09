@@ -33,24 +33,12 @@ half3 Lux_UnpackScaleNormal(half2 packednormal, half bumpScale)
     
 }
 
-//-------------------------------------------------------------------------------------
+// Fix Unity's dynamic batching bug
 
-// little helpers for GI calculation
-/*
-#define UNITY_GLOSSY_ENV_FROM_SURFACE(x, s, data)				\
-	Unity_GlossyEnvironmentData g;								\
-	g.roughness		= 1 - s.Smoothness;							\
-	g.reflUVW		= reflect(-data.worldViewDir, s.Normal);	\
+#define LUX_FIX_BATCHINGBUG \
+    v.normal = normalize(v.normal); \
+    v.tangent = normalize(v.tangent);
 
 
-	#if defined(UNITY_PASS_DEFERRED) && UNITY_ENABLE_REFLECTION_BUFFERS
-		#define UNITY_GI(x, s, data) x = UnityGlobalIllumination (data, s.Occlusion, s.Normal);
-	#else
-		#define UNITY_GI(x, s, data) 								\
-			UNITY_GLOSSY_ENV_FROM_SURFACE(g, s, data);				\
-			x = UnityGlobalIllumination (data, s.Occlusion, s.Normal, g);
-	#endif
-
-    */
 
 #endif // LUX_UTILS_INCLUDED

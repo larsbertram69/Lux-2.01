@@ -160,7 +160,7 @@
 				lux.puddleMaskValue = tex2D(_ParallaxMap, lux.finalUV.xy * _PuddleMaskTiling).r;
 			#endif
 
-			// Calculate Snow and Water Distrubution and get the refracted UVs in case water ripples and/or water flow are enabled
+			// Calculate Snow and Water Distribution and get the refracted UVs in case water ripples and/or water flow are enabled
 			// LUX_INIT_DYNAMICWEATHER(half puddle mask value, half snow mask value, half3 tangent space normal)
 			LUX_INIT_DYNAMICWEATHER(lux.puddleMaskValue, 1.0, o.Normal)	
 
