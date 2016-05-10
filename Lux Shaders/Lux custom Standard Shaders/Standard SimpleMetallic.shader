@@ -10,27 +10,34 @@
 		LOD 200
 		
 		CGPROGRAM
-		#pragma surface surf LuxStandardSpecular fullforwardshadows
+		#pragma surface surf LuxStandardSpecular vertex:vert fullforwardshadows
 		#pragma target 3.0
 		#pragma multi_compile _ LUX_AREALIGHTS
 
 		#include "../Lux Core/Lux Config.cginc"
 		#include "../Lux Core/Lux Lighting/LuxStandardPBSLighting.cginc"
+		#include "../Lux Core/Lux Setup/LuxStructs.cginc"
 		#include "../Lux Core/Lux Utils/LuxUtils.cginc"
 
 		sampler2D _MainTex;
 
 		struct Input {
-			float2 uv_MainTex;
+			float2 lux_uv_MainTex;			// Important: we must not use standard uv_MainTex as we need access to _MainTex_ST
 		};
 
 		half _Glossiness;
 		half _Metallic;
 		fixed4 _Color;
 
+		void vert (inout appdata_full v, out Input o) {
+			UNITY_INITIALIZE_OUTPUT(Input,o);
+			// Lux
+			o.lux_uv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
+		}
+
 		void surf (Input IN, inout SurfaceOutputLuxStandardSpecular o) {
 			// Albedo comes from a texture tinted by color
-			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
+			fixed4 c = tex2D (_MainTex, IN.lux_uv_MainTex) * _Color;
 			o.Albedo = c.rgb;
 			// Metallic and smoothness come from slider variables
 			o.Metallic = _Metallic;

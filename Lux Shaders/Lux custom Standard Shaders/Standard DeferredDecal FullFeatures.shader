@@ -94,7 +94,7 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 		#include "../Lux Core/Lux Features/LuxDynamicWeather.cginc"
 
 		struct Input {
-			float4 myuv_MainTex;			// Here we have 2 channels left
+			float4 lux_uv_MainTex;			// Here we have 2 channels left
 			float3 viewDir;
 			float3 worldNormal;
 			INTERNAL_DATA
@@ -106,14 +106,13 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 
 		half4 _Color;
 		sampler2D _MainTex;
-		float4 _MainTex_ST;
 		sampler2D _BumpMap;
 		sampler2D _SpecGlossMap;
 
 		void vert (inout appdata_full v, out Input o) {
 			UNITY_INITIALIZE_OUTPUT(Input,o);
 			// Lux
-			o.myuv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
+			o.lux_uv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
 			// As decals most likely will have very simple geometry we have to fix Unity's dynamic batching bug
 			LUX_FIX_BATCHINGBUG
 	    	o.color = v.color;
@@ -134,7 +133,7 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 
 			// Initialize the Lux fragment structure. Always do this first.
             // LUX_SETUP(float2 main UVs, float2 secondary UVs, half3 view direction in tangent space, float3 world position, float distance to camera, float2 flow direction, fixed4 vertex color)
-			LUX_SETUP(IN.myuv_MainTex.xy, float2(0,0), IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
+			LUX_SETUP(IN.lux_uv_MainTex.xy, float2(0,0), IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
 
 			// We use the LUX_PARALLAX macro which handles PM or POM and sets lux.height, lux.puddleMaskValue and lux.mipmapValue
 			LUX_PARALLAX
@@ -158,7 +157,6 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 			o.Normal = UnpackNormal (tex2D (_BumpMap, lux.finalUV.xy));
 			half4 specGloss = tex2D (_SpecGlossMap, lux.finalUV.xy);
 			o.Specular = specGloss.rgb;
-			o.Smoothness = specGloss.a;
 
 		//	Please note: We do not have to write to o.Smoothness or o.Occlusion in this pass as these would be coruppted anyway.
 		//	We will do so in the 2nd pass
@@ -207,7 +205,7 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 		#include "../Lux Core/Lux Features/LuxDynamicWeather.cginc"
 
 		struct Input {
-			float4 myuv_MainTex;			// Here we have 2 channels left
+			float4 lux_uv_MainTex;			// Here we have 2 channels left
 			float3 viewDir;
 			float3 worldNormal;
 			INTERNAL_DATA
@@ -219,7 +217,6 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 
 		half4 _Color;
 		sampler2D _MainTex;
-		float4 _MainTex_ST;
 		sampler2D _BumpMap;
 		sampler2D _SpecGlossMap;
 		sampler2D _OcclusionMap;
@@ -227,7 +224,7 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 		void vert (inout appdata_full v, out Input o) {
 			UNITY_INITIALIZE_OUTPUT(Input,o);
 			// Lux
-			o.myuv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
+			o.lux_uv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
 			// As decals most likely will have very simple geometry we have to fix Unity's dynamic batching bug
 			LUX_FIX_BATCHINGBUG
 	    	o.color = v.color;
@@ -246,7 +243,7 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 		{
 			// Initialize the Lux fragment structure. Always do this first.
             // LUX_SETUP(float2 main UVs, float2 secondary UVs, half3 view direction in tangent space, float3 world position, float distance to camera, float2 flow direction, fixed4 vertex color)
-			LUX_SETUP(IN.myuv_MainTex.xy, float2(0,0), IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
+			LUX_SETUP(IN.lux_uv_MainTex.xy, float2(0,0), IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
 
 			// We use the LUX_PARALLAX macro which handles PM or POM and sets lux.height, lux.puddleMaskValue and lux.mipmapValue
 			LUX_PARALLAX
@@ -262,6 +259,8 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
         //  Do your regular stuff:
 			fixed4 c = tex2D (_MainTex, lux.finalUV.xy) * _Color;
 			o.Alpha = c.a;
+		//	Important: We have to write to o.Normal as otherwise Parallax will be corrupted due to missing matrices
+			o.Normal = half3(0,0,1);
 			o.Smoothness = tex2D (_SpecGlossMap, lux.finalUV.xy).a;
 			o.Occlusion = tex2D (_OcclusionMap, lux.finalUV.xy).g;
 		//  ///////////////////////////////
@@ -275,7 +274,7 @@ Shader "Lux/Deferred Decals/Standard Lighting/Full Features"
 		{
 			diffuse.a *= o.Alpha; 			// final Occlusion
 			specSmoothness.a *= o.Alpha;	// final Smoothness
-			normal.a = 1; 					// Material ID
+			normal.a = 1; 					// Material
 		}
 
 		ENDCG

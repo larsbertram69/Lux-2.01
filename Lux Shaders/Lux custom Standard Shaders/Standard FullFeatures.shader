@@ -107,7 +107,7 @@
 		#include "../Lux Core/Lux Features/LuxDiffuseScattering.cginc"
 
 		struct Input {
-			float2 uv_MainTex;
+			float2 lux_uv_MainTex;			// Important: we must not use standard uv_MainTex as we need access to _MainTex_ST
 			float2 uv_DetailAlbedoMap;
 			float3 viewDir;
 			float3 worldNormal;
@@ -127,6 +127,7 @@
 		void vert (inout appdata_full v, out Input o) {
 			UNITY_INITIALIZE_OUTPUT(Input,o);
 			// Lux
+			o.lux_uv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
 	    	o.color = v.color;
 	    	// Calc Tangent Space Rotation
 			float3 binormal = cross( v.normal, v.tangent.xyz ) * v.tangent.w;
@@ -143,7 +144,7 @@
 			
 			// Initialize the Lux fragment structure. Always do this first.
             // LUX_SETUP(float2 main UVs, float2 secondary UVs, half3 view direction in tangent space, float3 world position, float distance to camera, float2 flow direction, fixed4 vertex color)
-			LUX_SETUP(IN.uv_MainTex, IN.uv_DetailAlbedoMap, IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
+			LUX_SETUP(IN.lux_uv_MainTex.xy, IN.uv_DetailAlbedoMap, IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
 
 			// We use the LUX_PARALLAX macro which handles PM or POM and sets lux.height, lux.puddleMaskValue and lux.mipmapValue
 			LUX_PARALLAX

@@ -22,7 +22,7 @@
             [Space(4)]
             [NoScaleOffset] _ParallaxMap ("Height (G) (Mix Mapping: Height2 (A) Mix Map (B)) PuddleMask (R)", 2D) = "white" {}
             // As we can't access MainTex_ST (Tiling) in surface shaders
-            _ParallaxToBaseRatio ("MainTex Tiling", Float) = 1
+            [Lux_TextureTilingDrawer] _ParallaxToBaseRatio ("MainTex Tiling", Vector) = (1,1,0,0)
             _ParallaxTiling ("Parallax Tiling", Float) = 1
             _Parallax ("Height Scale", Range (0.0, 1.0)) = 0.02
             [Space(4)]
@@ -122,7 +122,7 @@
             #include "../Lux Core/Lux Features/LuxTessellation.cginc"
             
             struct Input {
-                float2 uv_MainTex;
+                float2 uv_MainTex;      // Important: tessellation shaders have to use uv_MainTex
                 float3 viewDir;
                 float3 worldPos;
                 float3 worldNormal;
@@ -130,6 +130,7 @@
                 // Lux
                 fixed4 color : COLOR0;  // Important: declare color expilicitely as COLOR0
             };
+    
 
             fixed4 _Color;
             sampler2D _MainTex;

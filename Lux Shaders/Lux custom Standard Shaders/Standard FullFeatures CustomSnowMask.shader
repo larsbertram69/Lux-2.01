@@ -115,7 +115,7 @@
 		#include "../Lux Core/Lux Features/LuxDiffuseScattering.cginc"
 
 		struct Input {
-			float2 uv_MainTex;
+			float2 lux_uv_MainTex;
 			float2 uv_DetailAlbedoMap;
 			float3 viewDir;
 			float3 worldNormal;
@@ -137,6 +137,7 @@
 		void vert (inout appdata_full v, out Input o) {
 			UNITY_INITIALIZE_OUTPUT(Input,o);
 			// Lux
+			o.lux_uv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
 	    	o.color = v.color;
 	    	// Calc Tangent Space Rotation
 			float3 binormal = cross( v.normal, v.tangent.xyz ) * v.tangent.w;
@@ -151,89 +152,57 @@
 
 		void surf (Input IN, inout SurfaceOutputLuxStandardSpecular o) {
 			
-		//	Initialize the Lux fragment structure. Always do this first.
-
-// Important: Even if both textures uses the same uvs we have to explicitely set up uv2
-LUX_SETUP(IN.uv_MainTex, IN.uv_DetailAlbedoMap, IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
-
+			// Initialize the Lux fragment structure. Always do this first.
+            // LUX_SETUP(float2 main UVs, float2 secondary UVs, half3 view direction in tangent space, float3 world position, float distance to camera, float2 flow direction, fixed4 vertex color)
+			LUX_SETUP(IN.lux_uv_MainTex, IN.uv_DetailAlbedoMap, IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
 
 
-//lux.mixmapValue = half2(IN.color.r, 1.0 - IN.color.r);
+			// As we use mix mapping and parallax we do not have to set the height nor the mixmapValue.
+			// Both get sampled and assigned within the LUX_PARALLAX function
+			LUX_PARALLAX
 
-		
-			//half height = tex2D(_MainTex, IN.uv_MainTex).g;
-			//half4 heightsnowmask = tex2D(_DispTex, IN.uv_MainTex);
+		//  ///////////////////////////////
+        //  From now on we should use lux.finalUV (float4!) to do our texture lookups.
 
 
-		//	half4 heightsnowmask = tex2D(_ParallaxMap, IN.uv_MainTex);
-			
-			//LUX_SET_HEIGHT( heightsnowmask.g )
-			//#define FIRSTHEIGHT_READ
-
-		//	As we use mix mapping and parallax we do not have to set the height nor the mixmapValue.
-		//	Both get sampled and assigned within the LUX_PARALLAX function
-		//	LUX_PARALLAX
-
-LUX_PARALLAX
-
-//half3 testvar = lux.mixmapValue.xxx;			
-
-			//o.Normal = UnpackNormal(tex2D(_BumpMap, lux.finalUV.xy));
-		//	As we want to to accumulate snow according to the per pixel world normal we have to get the per pixel normal in tangent space up front using extruded final uvs from LUX_PARALLAX
-		//	In order to make the normal fit the mix mapping we have to sample and lerp both normals
+			// As we want to to accumulate snow according to the per pixel world normal we have to get the per pixel normal in tangent space up front using extruded final uvs from LUX_PARALLAX
+			// In order to make the normal fit the mix mapping we have to sample and lerp both normals
 			o.Normal = UnpackNormal( lerp( tex2D(_BumpMap, lux.finalUV.xy), tex2D(_DetailNormalMap, lux.finalUV.zw), lux.mixmapValue.y ) );
 		
-			// inputs: lux, half puddleMaskValue: e.g. vertex color or texture input, half snowMaskValue: e.g. vertex color or texture input
-		//	LUX_INIT_DYNAMICWEATHER(lux, 1, 1)
-	//		LUX_INIT_DYNAMICWEATHER(lux, tex2D(_MainTex, IN.uv_MainTex * 0.2).g, 1 )
 
+			half4 customSnowMaskBump = tex2D(_CustomSnowMaskBump, lux.finalUV.xy * _CustomSnowMaskBumpTiling);
+			half3 customSnowNormal = UnpackNormalDXT5nm(customSnowMaskBump);
 
+			#if defined (LOD_FADE_CROSSFADE)
+				lux.puddleMaskValue = tex2D(_ParallaxMap, lux.finalUV.xy * _PuddleMaskTiling).r;
+			#endif
 
+			// Calculate Snow and Water Distribution and get the refracted UVs in case water ripples and/or water flow are enabled
+			// LUX_INIT_DYNAMICWEATHER (half puddle mask value, half snow mask value, half3 tangent space normal)
+			LUX_INIT_DYNAMICWEATHER(lux.puddleMaskValue, customSnowMaskBump.b, o.Normal)	
 
-//half3 skidMask = tex2D(_SkidBumpMap, lux.finalUV.xy)).;
-half4 customSnowMaskBump = tex2D(_CustomSnowMaskBump, lux.finalUV.xy * _CustomSnowMaskBumpTiling);
-
-
-half3 customSnowNormal = UnpackNormalDXT5nm(customSnowMaskBump);
-
-#if defined (LOD_FADE_CROSSFADE)
-	lux.puddleMaskValue = tex2D(_ParallaxMap, lux.finalUV.xy * _PuddleMaskTiling).r;
-#endif
-
-
-		// LUX_INIT_DYNAMICWEATHER (half puddle mask value, half snow mask value, half3 tangent space normal)
-LUX_INIT_DYNAMICWEATHER(lux.puddleMaskValue, customSnowMaskBump.b, o.Normal)	
-
-
-			//UnpackNormal(tex2D(_BumpMap, IN.uv_MainTex)) )
-
-			// In case water ripples and/or water flow are enabled you should use lux.finalUV from here on (which is float4)
-
+		//  ///////////////////////////////
+        //  Do your regular stuff:
 
 			fixed4 c = tex2D (_MainTex, lux.finalUV.xy) * _Color;
 			fixed4 d = tex2D (_DetailAlbedoMap, lux.finalUV.zw) * _Color2;
-			o.Albedo = lerp(c.rgb, d.rgb, lux.mixmapValue.y); // * IN.viewDir; // lux.snowAmount.x; //
-			
-
+			o.Albedo = lerp(c.rgb, d.rgb, lux.mixmapValue.y);
 			half4 specGloss = lerp( tex2D(_SpecGlossMap, lux.finalUV.xy), tex2D(_SpecGlossMap2, lux.finalUV.zw), lux.mixmapValue.y);
-
 			o.Specular = specGloss.rgb; //_SpecColor;
 			o.Smoothness = specGloss.a; //c.a;
 			o.Alpha = 1;
-
-
 		//	In case uvs might be refracted by water ripples or water flow we will have to sample the normal a second time :-(
 			o.Normal = UnpackNormal( lerp( tex2D(_BumpMap, lux.finalUV.xy), tex2D(_DetailNormalMap, lux.finalUV.zw), lux.mixmapValue.y ) );
+		//  ///////////////////////////////
 
 
-
-//////
+			// Apply dynamic water and snow
 			LUX_APPLY_DYNAMICWEATHER
 
-
+			// Add custom snow bump
 			o.Normal = lerp(o.Normal, customSnowNormal, (1 - (customSnowMaskBump.b)) * saturate(_Lux_WaterToSnow.x + _SnowAccumulation.x) * lux.snowAmount.x );
 
-
+			// Then add diffuse scattering
 			LUX_DIFFUSESCATTERING(o.Albedo, o.Normal, IN.viewDir)
 
 		}

@@ -77,7 +77,7 @@ Shader "Hidden/TerrainEngine/Splatmap/Lux-Standard-Base" {
         };
 
 		struct Input {
-			float2 uv_MainTex;
+			float2 lux_uv_MainTex;			// Important: we must not use standard uv_MainTex as we need access to _MainTex_ST
 			float3 viewDir;
 			float4 lux_worldPosDistance;
 			float3 worldNormal;
@@ -86,6 +86,8 @@ Shader "Hidden/TerrainEngine/Splatmap/Lux-Standard-Base" {
 
 		void vert (inout appdata v, out Input o) {
 			UNITY_INITIALIZE_OUTPUT(Input,o);
+			// Lux
+			o.lux_uv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
 			v.tangent.xyz = cross(v.normal, float3(0,0,1));
 			v.tangent.w = -1;
 			// Store world position and distance to camera
@@ -96,9 +98,9 @@ Shader "Hidden/TerrainEngine/Splatmap/Lux-Standard-Base" {
 
 		void surf (Input IN, inout SurfaceOutputLuxStandardSpecular o) {
 
-			LUX_SETUP(IN.uv_MainTex, float2(0,0), IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, float2(0,0), half4(1,1,1,1))
+			LUX_SETUP(IN.lux_uv_MainTex, float2(0,0), IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, float2(0,0), half4(1,1,1,1))
 
-			half4 c = tex2D (_MainTex, IN.uv_MainTex);
+			half4 c = tex2D (_MainTex, IN.lux_uv_MainTex);
 			o.Albedo = c.rgb;
 			o.Alpha = 1;
 			o.Smoothness = c.a;

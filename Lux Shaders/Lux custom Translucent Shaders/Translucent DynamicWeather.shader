@@ -70,7 +70,7 @@
 		// All other inputs are defined in the includes
 
 		struct Input {
-			float2 uv_MainTex;
+			float2 lux_uv_MainTex;
 			float3 viewDir;
 			float3 worldNormal;
 			INTERNAL_DATA
@@ -83,6 +83,7 @@
 		void vert (inout appdata_full v, out Input o) {
 			UNITY_INITIALIZE_OUTPUT(Input,o);
 			// Lux
+			o.lux_uv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
 	    	o.color = v.color;
 	    	// Calc Tangent Space Rotation
 			float3 binormal = cross( v.normal, v.tangent.xyz ) * v.tangent.w;
@@ -100,10 +101,10 @@
 			
 			// Initialize the Lux fragment structure. Always do this first.
             // LUX_SETUP(float2 main UVs, float2 secondary UVs, half3 view direction in tangent space, float3 world position, float distance to camera, float2 flow direction, fixed4 vertex color)
-			LUX_SETUP(IN.uv_MainTex, float2(0,0), IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
+			LUX_SETUP(IN.lux_uv_MainTex, float2(0,0), IN.viewDir, IN.lux_worldPosDistance.xyz, IN.lux_worldPosDistance.w, IN.lux_flowDirection, IN.color)
 
 			// As we want to to accumulate snow according to the per pixel world normal we have to get the per pixel normal in tangent space up front using extruded final uvs from LUX_PARALLAX
-			o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_MainTex));
+			o.Normal = UnpackNormal(tex2D(_BumpMap, IN.lux_uv_MainTex));
 			
 			// As we do not have a height map here, we set height to Normal.z to get some variation in the water accumulation
 			LUX_SET_HEIGHT( o.Normal.z )

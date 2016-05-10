@@ -143,7 +143,7 @@ Shader "Lux Standard (Specular setup)"
 			#pragma shader_feature ___ _DETAIL_MULX2
 			#pragma shader_feature _PARALLAXMAP
 
-			// Lux uses spped tree's shader keywords
+			// Lux uses speed tree's shader keywords
 			// Do we use Mix Mapping?
 			#pragma shader_feature _ GEOM_TYPE_BRANCH_DETAIL
 			// Which mixmapping mode?

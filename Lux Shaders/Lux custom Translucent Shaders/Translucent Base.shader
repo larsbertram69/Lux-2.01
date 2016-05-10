@@ -27,7 +27,7 @@
 		#pragma target 3.0
 
 		struct Input {
-			float2 uv_MainTex;
+			float2 uv_MainTex;		// As we do not include "LuxStructs.cginc" and "LuxParallax.cginc" we can use "uv_MainTex"
 		};
 
 		sampler2D _MainTex;

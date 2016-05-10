@@ -69,6 +69,9 @@ struct LuxFragment
 
 
 #if !defined (LUX_STANDARD_CORE_INCLUDED)
+    #if !defined(TESSELLATION_ON)
+        float4 _MainTex_ST;
+    #endif
     float2 _Lux_DetailDistanceFade;
     // when using mix mapping
     #if defined(GEOM_TYPE_BRANCH_DETAIL)

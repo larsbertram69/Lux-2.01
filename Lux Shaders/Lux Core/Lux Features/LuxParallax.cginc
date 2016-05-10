@@ -31,15 +31,21 @@ void Lux_Parallax (
         i_tex = i_tex;
     
     #else
+
         // Regular Detail Blending
         #if !defined(GEOM_TYPE_BRANCH_DETAIL)
             half2 heightAndPuddleMask = tex2D (_ParallaxMap, i_tex.xy * _ParallaxTiling).gr;
             height = heightAndPuddleMask.x;
             #if !defined(TESSELLATION_ON)
-                // As we might have to deal with two different tilings here, we have to calculate the ratio between base and detail texture tiling and use it when offsetting.
-                float2 BaseToDetailFactor = i_tex.zw/i_tex.xy;
-                offset = ParallaxOffset1Step (height, _Parallax, viewDir);
-                i_tex += float4(offset, offset * BaseToDetailFactor) / _ParallaxTiling;
+                #if defined (_DETAIL_MULX2)
+                    // As we might have to deal with two different tilings here, we have to calculate the ratio between base and detail texture tiling and use it when offsetting.
+                    float2 BaseToDetailFactor = i_tex.zw/i_tex.xy;
+                #else
+                    float2 BaseToDetailFactor = 1;
+                #endif
+                    offset = ParallaxOffset1Step (height, _Parallax, viewDir);
+                    offset *= _MainTex_ST.xy;
+                    i_tex += float4(offset, offset * BaseToDetailFactor) / _ParallaxTiling;
                 // Get final height
                 #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
                     heightAndPuddleMask = tex2D (_ParallaxMap, i_tex.xy * _ParallaxTiling).gr;
@@ -74,6 +80,7 @@ void Lux_Parallax (
             height = dot(mixmapValue, h.xy);
             #if !defined(TESSELLATION_ON)
                 offset = ParallaxOffset1Step (height, _Parallax, viewDir);
+                offset *= _MainTex_ST.xy;
                 i_tex += float4(offset, offset) / _ParallaxTiling;
                 // Get final height
                 #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
@@ -122,7 +129,7 @@ void Lux_SimplePOM (
 //  int nNumSamples = (int)lerp( nMaxSamples, nMinSamples, dot( E, N ) );
     
     // Specify the view ray step size. Each sample will shift the current view ray by this amount.
-    float fStepSize = 1.0 / (float)POM_Linear_Steps; //(float)nNumSamples;
+    float2 fStepSize = 1.0 / (float)POM_Linear_Steps; //(float)nNumSamples;
 
     float4 uvScaled = uvIN * _ParallaxTiling;
 
@@ -149,7 +156,11 @@ void Lux_SimplePOM (
     // As we might have to deal with two different tilings here, we have to calculate the ratio between base and detail texture tiling and use it when offsetting.
     float2 BaseToDetailFactor = uvIN.zw/uvIN.xy;
 
-    float2 finalStepSize = fStepSize * vMaxOffset;
+    float2 finalStepSize = fStepSize * vMaxOffset 
+    #if !defined(TESSELLATION_ON) 
+        * _MainTex_ST.xy 
+    #endif
+    ;
 
     bool hit = false;
 
@@ -277,7 +288,13 @@ void Lux_SimplePOM_MixMap (
     // As we might have to deal with two different tilings here, we have to calculate the ratio between base and detail texture tiling and use it when offsetting.
     float2 BaseToDetailFactor = uvIN.zw/uvIN.xy;
 
-    float4 finalStepSize = fStepSize * vMaxOffset * float4(1,1,BaseToDetailFactor);
+    float4 finalStepSize = fStepSize * vMaxOffset 
+    #if !defined(TESSELLATION_ON) 
+        * _MainTex_ST.xyxy 
+    #endif
+    * float4(1,1,BaseToDetailFactor);
+
+
     float2 finalHeights = float2(1.0, 1.0);
 
     bool hit = false;

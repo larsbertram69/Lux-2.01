@@ -5,15 +5,14 @@
 		_Glossiness ("Smoothness", Range(0,1)) = 0.5
 		_SpecColor("Specular", Color) = (.2,.2,.2,1)
 
-		[NoScaleOffset] _BumpMap("Bump Refraction", 2D) = "bump" {}
-		//_NormalScale("Normalscale", Range(0,1)) = 0.5
+		[NoScaleOffset] _BumpMap("Normalmap", 2D) = "bump" {}
 
 		[Space(4)]
 		[Header(Refraction Settings ___________________________________________________ )]
 		[Space(4)]
 		_Refraction("Refraction", Range(0,128)) = 10
 		_GeoInfluence("- Geometry", Range(0,1)) = 1
-		_BumpInfluence("- Bump", Range(0,1)) = 1
+		_BumpInfluence("- Normalmap", Range(0,1)) = 1
 
 		[Space(4)]
 		_FresnelFactor("Fresnel Factor", Range(0.1, 5.0)) = 5
@@ -32,10 +31,11 @@
 
 		#pragma target 3.0
 		#include "../Lux Core/Lux Lighting/LuxStandardPBSLighting.cginc"
+		#include "../Lux Core/Lux Setup/LuxStructs.cginc"
 		#pragma multi_compile __ LUX_AREALIGHTS
 
 		struct Input {
-			float2 uv_MainTex;
+			float2 lux_uv_MainTex;			// Important: we must not use standard uv_MainTex as we need access to _MainTex_ST
 			float4 grabUV;
 			float4 viewSpaceNormal_ProjPos; // We have to combine the projected normal and ProjPos.z
 
@@ -62,6 +62,7 @@
 
 		void vert(inout appdata_full v, out Input o) {
 			UNITY_INITIALIZE_OUTPUT(Input, o);
+			o.lux_uv_MainTex.xy = TRANSFORM_TEX(v.texcoord, _MainTex);
 			float4 hpos = mul(UNITY_MATRIX_MVP, v.vertex);
 			o.grabUV = ComputeGrabScreenPos(hpos);
 			float3 worldPosProjPos = ComputeScreenPos(hpos);
@@ -72,13 +73,13 @@
 		}
 
 		void surf (Input IN, inout SurfaceOutputLuxStandardSpecular o) {
-			fixed4 c = tex2D (_MainTex, IN.uv_MainTex.xy) * _Color;
+			fixed4 c = tex2D (_MainTex, IN.lux_uv_MainTex.xy) * _Color;
 			o.Albedo = _Color.rgb * _Color.a;
 			o.Smoothness = _Glossiness;
 			o.Alpha = c.a;
 			o.Specular = _SpecColor;
 
-			half4 normalSample = tex2D(_BumpMap, IN.uv_MainTex.xy);
+			half4 normalSample = tex2D(_BumpMap, IN.lux_uv_MainTex.xy);
 			o.Normal = UnpackNormal(normalSample);
 
 			half3 wNormal = WorldNormalVector(IN, float3(0, 0, 1));

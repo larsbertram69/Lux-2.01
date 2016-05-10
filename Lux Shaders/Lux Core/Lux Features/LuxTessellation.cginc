@@ -11,7 +11,7 @@
         float _MinDist;
         float _MaxDist;
         half _EdgeLength;
-        half _ParallaxToBaseRatio;
+        half2 _ParallaxToBaseRatio;
     #endif 
 #endif
 
