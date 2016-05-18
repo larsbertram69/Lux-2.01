@@ -10,6 +10,9 @@
     half2           _Lux_SnowMelt;          // x: SnowMelt / y: SnowMelt 2^(-10 * (x))
     sampler2D       _Lux_SnowWaterBump;     // Shared by Snow and water flow
     sampler2D       _Lux_SnowMask;
+
+    // Wetness - Inputs from script
+    half4           _Lux_WaterFloodlevel; // x: cracks / y: puddles / z: wetness darkening / w: wetness smoothness / 
 #endif
 
 #if defined (_SNOW)
@@ -61,9 +64,6 @@
         half        _Lux_FlowRefraction;
     #endif
 
-    // Wetness - Inputs from script
-    half2          _Lux_WaterFloodlevel;
-    
     // Properties only needed by ripple enabled wetness shaders
     #if defined (_WETNESS_RIPPLES) || defined (_WETNESS_FULL)
         sampler2D   _Lux_RainRipples;
@@ -92,10 +92,10 @@
         // Tweak script based accumulation according to the defined factors and add constant accumulated water from material
         // mix mapping
         #if defined (GEOM_TYPE_BRANCH_DETAIL)
-            half2 WaterFloodlevel = ( _Lux_WaterFloodlevel * (_WaterAccumulationCracksPuddles.yw * lux.mixmapValue.x + _WaterAccumulationCracksPuddles2.yw * lux.mixmapValue.y)
+            half2 WaterFloodlevel = ( _Lux_WaterFloodlevel.xy * (_WaterAccumulationCracksPuddles.yw * lux.mixmapValue.x + _WaterAccumulationCracksPuddles2.yw * lux.mixmapValue.y)
                                              + lux.localWater );
         #else
-            half2 WaterFloodlevel = ( _Lux_WaterFloodlevel * _WaterAccumulationCracksPuddles.yw + lux.localWater );
+            half2 WaterFloodlevel = ( _Lux_WaterFloodlevel.xy * _WaterAccumulationCracksPuddles.yw + lux.localWater );
         #endif
         // Get the "size" of the accumulated water in cracks
         AccumulatedWaters.x = min(WaterFloodlevel.x, WaterFloodlevel.x - lux.height );
@@ -394,6 +394,17 @@ void ApplySnowAndWetness (
             half porosity = saturate((((1 - oneMinusRoughness) - 0.5)) / 0.4);
             half metalness = saturate((dot(specColor, 0.33) * 1000 - 500) );
             half porosityFactor = lerp(1, 0.2, saturate((1 - metalness) * porosity));
+
+            // Get thin layer of Wetness
+            half3 wetness = _Lux_WaterFloodlevel.zww;
+            #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
+                wetness *= saturate(lux.worldNormal.y + (1.0 - _WaterSlopeDamp));
+            #endif
+            // wetness.yz control smoothness/normal – so they get influenced by porosity
+            wetness.yz *= (1-porosityFactor);
+            wetness.z *= 0.5;
+            wetness = max(lux.waterAmount.xxx, wetness);
+
             diffColor *= lerp(1.0, 0.3, lux.waterAmount.x);
         #endif  
     
@@ -411,13 +422,24 @@ void ApplySnowAndWetness (
                 half porosity = saturate((((1 - oneMinusRoughness) - 0.5)) / 0.4);
                 half metalness = saturate((dot(specColor, 0.33) * 1000 - 500) );
                 half porosityFactor = lerp(1, 0.2, saturate((1 - metalness) * porosity));
+
+                // Get thin layer of Wetness
+                half3 wetness = _Lux_WaterFloodlevel.zww;
+                #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
+                    wetness *= saturate(lux.worldNormal.y + (1.0 - _WaterSlopeDamp));
+                #endif
+                // wetness.yz control smoothness/normal – so they get influenced by porosity
+                wetness.yz *= (1-porosityFactor);
+                wetness.z *= 0.5;
+                wetness = max(lux.waterAmount.xxx, wetness);
+
                 // Lerp all outputs towards water
-                diffColor *= lerp(1.0, porosityFactor, lux.waterAmount.x);
+                diffColor *= lerp(1.0, porosityFactor, wetness.x); //lux.waterAmount.x);
             #endif
             
-            // water color is only available if wetness is enabled
+            // Water color is only available if wetness is enabled
             #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
-                // Add Water color
+            // Add Water color (thin layer wetness does not influence water color)
                 // mix mapping
                 #if defined(GEOM_TYPE_BRANCH_DETAIL)
                     lux.waterColor = half4(_WaterColor.rgb, 1) * _WaterColor.a * lux.mixmapValue.x + half4(_WaterColor2.rgb, 1) * _WaterColor2.a * lux.mixmapValue.y;
@@ -428,11 +450,12 @@ void ApplySnowAndWetness (
                 occlusion = lerp(occlusion, 1, lux.waterColor.a * lux.waterAmount.x);
                 suppressionFactor = 1.0 - lux.waterColor.a * lux.waterAmount.x;
             #endif
-            lux.tangentNormal = lerp(lux.tangentNormal, lux.waterNormal, lux.waterAmount.x);
-            half wetSmoothness = lerp(oneMinusRoughness, lerp(0.85, 0.60, porosityFactor), lux.waterAmount.x);
-            oneMinusRoughness = lerp(wetSmoothness, 0.9, lux.waterAmount.x);
+            lux.tangentNormal = lerp(lux.tangentNormal, lux.waterNormal, wetness.z );
+
+            half wetSmoothness = lerp(oneMinusRoughness, lerp(0.85, 0.60, porosityFactor), wetness.y ); //lux.waterAmount.x);
+            oneMinusRoughness = lerp(wetSmoothness, 0.9, wetness.y ); //lux.waterAmount.x);
             // spec color of water is pretty low
-            specColor = lerp(specColor, 0.02, lux.waterAmount.x);
+            specColor = lerp(specColor, 0.02, wetness.y ); //lux.waterAmount.x);
         }
     #endif
 

@@ -27,10 +27,21 @@ public class LuxDynamicWeather : MonoBehaviour {
 	
 	[Space(10)]
 	[Range(0.0f, 1.0f)]
+	public float WetnessInfluenceOnAlbedo = 0.85f;
+	[Range(0.0f, 1.0f)]
+	public float WetnessInfluenceOnSmoothness = 0.5f;
+	[Range(0.0f, 1.0f)]
+	public float AccumulationRateWetness = 0.35f;
+	[Range(0.0f, 0.5f)]
+	public float EvaporationRateWetness = 0.075f;
+
+	[Space(10)]
+	[Range(0.0f, 1.0f)]
 	public float AccumulationRateCracks = 0.25f;
 	[Range(0.0f, 1.0f)]
 	public float AccumulationRatePuddles = 0.2f;
 
+	
 	[Range(0.0f, 0.5f)]
 	public float EvaporationRateCracks = 0.20f;
 	[Range(0.0f, 0.5f)]
@@ -41,6 +52,8 @@ public class LuxDynamicWeather : MonoBehaviour {
 	public float AccumulationRateSnow = 0.10f;
 
 	[Space(15)]
+	[Range(0.0f, 1.0f)]
+	public float AccumulatedWetness = 0.0f;
 	[Range(0.0f, 1.0f)]
 	public float AccumulatedCracks = 0.0f;
 	[Range(0.0f, 1.0f)]
@@ -119,6 +132,7 @@ public float SnowMelt = 0.0f;
 	void Update () {
 		if(ScriptControlledWeather) {
 
+			var temp_EvaporationRateWetness = Mathf.Lerp(0.0f, EvaporationRateWetness, Temperature / 40.0f );
 			var temp_EvaporationRateCracks = Mathf.Lerp(0.0f, EvaporationRateCracks, Temperature / 40.0f );
 			var temp_EvaporationRatePuddles = Mathf.Lerp(0.0f, EvaporationRatePuddles, Mathf.Abs(Temperature) / 40.0f );
 			//var temp_MeltingRateSnow = Mathf.Lerp(0.0f, MeltingRateSnow, Temperature / 40.0f );
@@ -134,11 +148,13 @@ public float SnowMelt = 0.0f;
 				var meltWater =	Mathf.Clamp01( (1.0f - WaterToSnow) * AccumulatedSnow * Time.deltaTime * TimeScale * WaterToSnowTimeScale * 4.0f );
 				var waterAcculumulation = RainIntensity * Time.deltaTime * TimeScale;
 								 		//+ (1.0f - WaterToSnow) * Mathf.Clamp01(AccumulatedSnow - AccumulatedWater) * Time.deltaTime * TimeScale * WaterToSnow_TimeScale * 4.0f;
-				AccumulatedCracks += waterAcculumulation * AccumulationRateCracks ; //+ meltWater * 4.0f * AccumulationRateCracks;
-				AccumulatedPuddles += waterAcculumulation * AccumulationRatePuddles ; //+ meltWater * 2.0f * AccumulationRatePuddles;
+				AccumulatedWetness += waterAcculumulation * AccumulationRateWetness + meltWater;
+				AccumulatedCracks += waterAcculumulation * AccumulationRateCracks; //+ meltWater * 4.0f * AccumulationRateCracks;
+				AccumulatedPuddles += waterAcculumulation * AccumulationRatePuddles; //+ meltWater * 2.0f * AccumulationRatePuddles;
 
 				// Dry / only if it is not raining - not accurate but easier to adjust
 				if (Rainfall == 0.0f) {
+					AccumulatedWetness -= temp_EvaporationRateWetness * Time.deltaTime * TimeScale;
 					AccumulatedCracks -= temp_EvaporationRateCracks * Time.deltaTime * TimeScale;
 					AccumulatedPuddles -= temp_EvaporationRatePuddles * Time.deltaTime * TimeScale;
 				}
@@ -152,11 +168,13 @@ public float SnowMelt = 0.0f;
 				WaterToSnow = Mathf.Clamp01(WaterToSnow);
 				AccumulatedSnow += SnowIntensity * AccumulationRateSnow * Time.deltaTime * TimeScale
 								+ WaterToSnow * Mathf.Clamp01(AccumulatedWater) * Time.deltaTime * TimeScale * WaterToSnowTimeScale;
-				AccumulatedCracks -= WaterToSnow  * Time.deltaTime * TimeScale * WaterToSnowTimeScale ;
-				AccumulatedPuddles -= WaterToSnow * Time.deltaTime * TimeScale * WaterToSnowTimeScale ;
+				AccumulatedWetness 	-= WaterToSnow * Time.deltaTime * TimeScale * WaterToSnowTimeScale;
+				AccumulatedCracks 	-= WaterToSnow * Time.deltaTime * TimeScale * WaterToSnowTimeScale;
+				AccumulatedPuddles 	-= WaterToSnow * Time.deltaTime * TimeScale * WaterToSnowTimeScale;
 			}
 
 			AccumulatedSnow = Mathf.Clamp01(AccumulatedSnow);
+			AccumulatedWetness = Mathf.Clamp01(AccumulatedWetness);
 			AccumulatedCracks = Mathf.Clamp01(AccumulatedCracks);
 			AccumulatedPuddles = Mathf.Clamp01(AccumulatedPuddles);
 			AccumulatedWater = Mathf.Max(AccumulatedCracks, AccumulatedPuddles);
@@ -187,7 +205,7 @@ public float SnowMelt = 0.0f;
 		Shader.SetGlobalVector("_Lux_SnowHeightParams", new Vector4(SnowStartHeight, SnowHeightBlending * 1000.0f, 0.0f, 0.0f));
 
 		Shader.SetGlobalVector("_Lux_RainfallRainSnowIntensity", new Vector3 (Rainfall, RainIntensity, SnowIntensity));
-		Shader.SetGlobalVector("_Lux_WaterFloodlevel", new Vector2(AccumulatedCracks, AccumulatedPuddles));
+		Shader.SetGlobalVector("_Lux_WaterFloodlevel", new Vector4(AccumulatedCracks, AccumulatedPuddles, AccumulatedWetness * WetnessInfluenceOnAlbedo, AccumulatedWetness * WetnessInfluenceOnSmoothness));
 		Shader.SetGlobalFloat("_Lux_SnowAmount", AccumulatedSnow * WaterToSnow );
 		
 		// Textures and texture settings

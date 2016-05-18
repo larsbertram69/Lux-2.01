@@ -179,23 +179,46 @@ half3 PerPixelWorldNormal(float4 i_tex, half4 tangentToWorld[3])
 		FragmentCommonData x = \
 		FragmentSetup(lux);
 
-	#define FRAGMENT_SETUP_FWDADD(x) \
-		LuxFragment lux = (LuxFragment)0; \
-		lux.baseUV = i.tex; \
-		lux.extrudedUV = i.tex; \
-		lux.finalUV = i.tex; \
-		lux.eyeVec = i.eyeVec; \
-		lux.eyeVecTangent = IN_VIEWDIR4PARALLAX_FWDADD(i); \
-		lux.tangentToWorld = i.tangentToWorldAndLightDir; \
-		lux.worldPos = IN_WORLDPOS(i); \
-		lux.viewDepth = i.posWorld.w; \
-		lux.worldNormalFace = i.tangentToWorldAndLightDir[2].xyz; \
-		lux.height = 1.0; \
-		lux.vertexColor = i.color; \
-		lux.waterFlowDir = i.fogCoord.yz; \
-		lux.facingSign = facing; \
-		FragmentCommonData x = \
-		FragmentSetup(lux);
+	// dx9 does not like eyeVec in forwardadd using translucent lighting?!
+
+	#if defined(SHADER_API_D3D9)
+		#define FRAGMENT_SETUP_FWDADD(x) \
+			LuxFragment lux = (LuxFragment)0; \
+			lux.baseUV = i.tex; \
+			lux.extrudedUV = i.tex; \
+			lux.finalUV = i.tex; \
+			lux.eyeVecTangent = IN_VIEWDIR4PARALLAX_FWDADD(i); \
+			lux.tangentToWorld = i.tangentToWorldAndLightDir; \
+			lux.worldPos = IN_WORLDPOS(i); \
+			lux.eyeVec = normalize(lux.worldPos.xyz - _WorldSpaceCameraPos); \
+			lux.viewDepth = i.posWorld.w; \
+			lux.worldNormalFace = i.tangentToWorldAndLightDir[2].xyz; \
+			lux.height = 1.0; \
+			lux.vertexColor = i.color; \
+			lux.waterFlowDir = i.fogCoord.yz; \
+			lux.facingSign = facing; \
+			FragmentCommonData x = \
+			FragmentSetup(lux);
+	#else
+		#define FRAGMENT_SETUP_FWDADD(x) \
+			LuxFragment lux = (LuxFragment)0; \
+			lux.baseUV = i.tex; \
+			lux.extrudedUV = i.tex; \
+			lux.finalUV = i.tex; \
+			lux.eyeVec = i.eyeVec; \
+			lux.eyeVecTangent = IN_VIEWDIR4PARALLAX_FWDADD(i); \
+			lux.tangentToWorld = i.tangentToWorldAndLightDir; \
+			lux.worldPos = IN_WORLDPOS(i); \
+			lux.eyeVec = normalize(lux.worldPos.xyz - _WorldSpaceCameraPos); \
+			lux.viewDepth = i.posWorld.w; \
+			lux.worldNormalFace = i.tangentToWorldAndLightDir[2].xyz; \
+			lux.height = 1.0; \
+			lux.vertexColor = i.color; \
+			lux.waterFlowDir = i.fogCoord.yz; \
+			lux.facingSign = facing; \
+			FragmentCommonData x = \
+			FragmentSetup(lux);
+	#endif
 
 	#define FRAGMENT_META_SETUP(x) \
 		LuxFragment lux = (LuxFragment)0; \
@@ -802,7 +825,11 @@ struct VertexOutputForwardAdd
 {
 	float4 pos							: SV_POSITION;
 	float4 tex							: TEXCOORD0;
-	half3 eyeVec 						: TEXCOORD1;
+//	dx9 does not like eyeVec in ForwardAdd, so we shift it to the pixelshader
+	#if defined(SHADER_API_D3D9)
+	#else
+		half3 eyeVec 						: TEXCOORD1;
+	#endif
 	half4 tangentToWorldAndLightDir[3]	: TEXCOORD2;	// [3x3:tangentToWorld | 1x3:lightDir]
 	LIGHTING_COORDS(5,6)
 //	Lux: Simple waste! Fog coords are only a float! So we redefine it using float4	
@@ -839,7 +866,10 @@ VertexOutputForwardAdd vertForwardAdd (LuxVertexInput v)
 	o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 //	Lux:
 	o.tex = LuxTexCoords(v);
-	o.eyeVec = NormalizePerVertexNormal(posWorld.xyz - _WorldSpaceCameraPos);
+//	dx9 does not like eyeVec in ForwardAdd, so we shift it to the pixelshader
+	#if !defined(SHADER_API_D3D9)
+		o.eyeVec = NormalizePerVertexNormal(posWorld.xyz - _WorldSpaceCameraPos);
+	#endif
 	float3 normalWorld = UnityObjectToWorldNormal(v.normal);
 	#ifdef _TANGENT_TO_WORLD
 		float4 tangentWorld = float4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
