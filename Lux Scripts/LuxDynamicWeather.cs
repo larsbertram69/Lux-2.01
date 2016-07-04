@@ -226,10 +226,12 @@ public float SnowMelt = 0.0f;
 		Shader.SetGlobalFloat("_Lux_SnowScatteringBias", SnowDiffuseScatteringBias);
 		Shader.SetGlobalFloat("_Lux_SnowScatteringContraction", SnowDiffuseScatteringContraction);
 		// Dynamic Snow Accumulation will influence the Albedo of the effected surfaces thus it should also update GI
-		if (SnowGIMasterRenderers.Length > 0) {
-			for (int i = 0; i < SnowGIMasterRenderers.Length; i++) {
-				if (SnowGIMasterRenderers[i] != null) {
-					DynamicGI.UpdateMaterials(SnowGIMasterRenderers[i]);	
+		if (SnowGIMasterRenderers != null) {
+			if (SnowGIMasterRenderers.Length > 0) {
+				for (int i = 0; i < SnowGIMasterRenderers.Length; i++) {
+					if (SnowGIMasterRenderers[i] != null) {
+						DynamicGI.UpdateMaterials(SnowGIMasterRenderers[i]);	
+					}
 				}
 			}
 		}

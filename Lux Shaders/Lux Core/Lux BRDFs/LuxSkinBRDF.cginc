@@ -22,7 +22,7 @@ half3 BentNormalsDiffuseLighting(float3 normal, float3 blurredNormal, float3 L, 
 	#if defined (LUX_LIGHTINGFADE)
 		float fade = distance(_WorldSpaceCameraPos, wpos);
 		fade = saturate( (_Lux_Skin_DistanceRange.x - fade) / _Lux_Skin_DistanceRange.y);
-		return lerp(nl * shadow, diffuseLookUp, fade);
+		return lerp( (nl * shadow).xxx, diffuseLookUp, fade ); // fixed for ps4
 	#else
 		return diffuseLookUp;
 	#endif

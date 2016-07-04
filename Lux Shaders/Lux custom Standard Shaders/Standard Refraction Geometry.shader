@@ -102,7 +102,7 @@
 			half4 background = tex2Dproj(_GrabTexture, UNITY_PROJ_COORD(distortedGrabUVs));
 		
 		//	Energy Conservation
-			o.Emission += background * (1.0 - fresnel) * (1.0 - _SpecColor) * lerp(1.0, o.Albedo, c.a);
+			o.Emission += background * (1.0 - fresnel) * (1.0 - _SpecColor) * lerp(half3(1.0, 1.0, 1.0), o.Albedo, c.a); // lerp fixed for ps4
 		}
 		ENDCG
 

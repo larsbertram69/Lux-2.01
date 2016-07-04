@@ -188,10 +188,11 @@
     //  Combine the given snow amount, world normal and snow height fade
         #if !defined (UNITY_PASS_META)
         //&& !defined(TESSELLATION_ON)
-            half2 snowAmount = saturate ( baseSnowAmount - _SnowSlopeDamp * (1.0 - lux.worldNormal.y - baseSnowAmount * 0.75) );
+            half2 snowAmount = saturate ( baseSnowAmount - _SnowSlopeDamp * saturate(1.0 - lux.worldNormal.y - baseSnowAmount * 0.25) ); // was: 0.75
         #else
-            half2 snowAmount = saturate ( baseSnowAmount - _SnowSlopeDamp * (1.0 - lux.worldNormalFace.y - baseSnowAmount * 0.75) );
+            half2 snowAmount = saturate ( baseSnowAmount - _SnowSlopeDamp * saturate(1.0 - lux.worldNormalFace.y - baseSnowAmount * 0.25) ); // was: 0.75
         #endif
+
         baseSnowAmount = snowAmount.x * lux.snowHeightFadeState;
     
     //  Add custom snowmask 
@@ -331,7 +332,9 @@ void Lux_DynamicWeather ( inout LuxFragment lux)
         // Skip detail calculations in the meta pass
         #if !defined (UNITY_PASS_META) && !defined (DO_NOT_REFRACT_UVS)
             // Add melted snow to wetnessMask
-            lux.waterAmount.x = saturate( lux.waterAmount.x + saturate (2.25 * lux.snowAmount.y * _Lux_SnowMelt.y) * _Lux_SnowAmount * _SnowAccumulation.y);
+            // Do not let melted snow flood the surface (* 0.75)
+            // lux.waterAmount.x = saturate( lux.waterAmount.x + saturate (2.25 * lux.snowAmount.y * _Lux_SnowMelt.y) * _Lux_SnowAmount * _SnowAccumulation.y);
+            lux.waterAmount.x = saturate( lux.waterAmount.x + saturate (1.75 * lux.snowAmount.y * _Lux_SnowMelt.y) * 0.75 ); // * _Lux_SnowAmount * _SnowAccumulation.y);
             // Add refraction from waterNormal to the main uvs
             #if defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
                 lux.finalUV += (
@@ -393,7 +396,7 @@ void ApplySnowAndWetness (
         #if defined (SHADER_API_D3D9)
             half porosity = saturate((((1 - oneMinusRoughness) - 0.5)) / 0.4);
             half metalness = saturate((dot(specColor, 0.33) * 1000 - 500) );
-            half porosityFactor = lerp(1, 0.2, saturate((1 - metalness) * porosity));
+            half porosityFactor = lerp(1, 0.3, saturate((1 - metalness) * porosity));
 
             // Get thin layer of Wetness
             half3 wetness = _Lux_WaterFloodlevel.zww;
@@ -405,13 +408,13 @@ void ApplySnowAndWetness (
             wetness.z *= 0.5;
             wetness = max(lux.waterAmount.xxx, wetness);
 
-            diffColor *= lerp(1.0, 0.3, lux.waterAmount.x);
+            diffColor *= lerp(1.0, porosityFactor, lux.waterAmount.x);
         #endif  
     
         #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
 //  TODO no mix mapping?
         UNITY_BRANCH
-        if (_Lux_WaterFloodlevel.x + _Lux_WaterFloodlevel.y + lux.localWater.x + lux.localWater.y > 0.0 || _Lux_WaterToSnow.x < 1.0) {
+        if (_Lux_WaterFloodlevel.x + _Lux_WaterFloodlevel.y + _Lux_WaterFloodlevel.z + lux.localWater.x + lux.localWater.y > 0.0 || _Lux_WaterToSnow.x < 1.0) {
         #else
         UNITY_BRANCH
         if (_Lux_WaterToSnow.x < 1.0) {
@@ -455,13 +458,13 @@ void ApplySnowAndWetness (
             half wetSmoothness = lerp(oneMinusRoughness, lerp(0.85, 0.60, porosityFactor), wetness.y ); //lux.waterAmount.x);
             oneMinusRoughness = lerp(wetSmoothness, 0.9, wetness.y ); //lux.waterAmount.x);
             // spec color of water is pretty low
-            specColor = lerp(specColor, 0.02, wetness.y ); //lux.waterAmount.x);
+            specColor = lerp(specColor, half3(0.02, 0.02, 0.02), wetness.y ); //lux.waterAmount.x);    // fixed for ps4
         }
     #endif
 
 //  Snow
     #if defined (_SNOW)
-        diffColor = lerp(diffColor, _Lux_SnowColor, lux.snowAmount.x);
+        diffColor = lerp(diffColor, _Lux_SnowColor.rgb, lux.snowAmount.x); // fixed for ps4
         // Tweak occlusion and emission according to snowAmount
         occlusion = lerp(occlusion, 1, lux.snowAmount.x);
         suppressionFactor = lerp(suppressionFactor, 1.0 - lux.snowAmount.x * _SnowOpacity, lux.snowAmount.x);
@@ -489,7 +492,7 @@ void ApplySnowAndWetness (
             lux.tangentNormal = lerp (lux.tangentNormal, lux.snowNormal, normalBlendFactor );
             // We skip snow smoothness for meta pass currently
             oneMinusRoughness = lerp(oneMinusRoughness, combinedNormalSmoothness.b, lux.snowAmount.x);
-            specColor = lerp(specColor, _Lux_SnowSpecColor, lux.snowAmount.x);
+            specColor = lerp(specColor, _Lux_SnowSpecColor.rgb, lux.snowAmount.x); // fixed for ps4
         #endif
     #endif
     
