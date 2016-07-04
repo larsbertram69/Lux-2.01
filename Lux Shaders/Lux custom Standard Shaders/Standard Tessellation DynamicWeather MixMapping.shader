@@ -167,7 +167,7 @@
             //  Do your regular stuff:
                 // We do manually mixmapping for all output members here.
                 half4 c = tex2D (_MainTex, lux.finalUV.xy) * _Color;
-o.Albedo = lerp(c.rgb, tex2D (_DetailAlbedoMap, lux.finalUV.xy) * _Color2, lux.mixmapValue.y);
+                o.Albedo = lerp(c.rgb, tex2D(_DetailAlbedoMap, lux.finalUV.xy).rgb * _Color2.rgb, lux.mixmapValue.y); // fixed for ps4
                 half4 specGloss = lerp( tex2D(_SpecGlossMap, lux.finalUV.xy), tex2D(_SpecGlossMap2, lux.finalUV.zw), lux.mixmapValue.y);
                 o.Specular = specGloss.rgb;
                 o.Smoothness = specGloss.a;
