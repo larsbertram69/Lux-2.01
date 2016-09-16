@@ -161,8 +161,8 @@ Shader "Lux Standard (Specular setup)"
 			// LOD_FADE_CROSSFADE
 			// Wetness
 			#pragma shader_feature _ _WETNESS_SIMPLE _WETNESS_RIPPLES _WETNESS_FLOW _WETNESS_FULL
-			// Puddle Mask from vertex colors or height map? BILLBOARD_FACE_CAMERA_POS: puddle mask has same tiling as heigh map
-			#pragma shader_feature _ GEOM_TYPE_MESH BILLBOARD_FACE_CAMERA_POS
+			// Puddle Mask from vertex colors or height map? LOD_FADE_CROSSFADE: puddle mask has same tiling as heigh map
+			#pragma shader_feature _ GEOM_TYPE_MESH LOD_FADE_CROSSFADE
 			// Snow
 			#pragma shader_feature _ _SNOW
 
@@ -226,8 +226,8 @@ Shader "Lux Standard (Specular setup)"
 			// LOD_FADE_CROSSFADE
 			// Wetness
 			#pragma shader_feature _ _WETNESS_SIMPLE _WETNESS_RIPPLES _WETNESS_FLOW _WETNESS_FULL
-			// Puddle Mask from vertex colors or height map? BILLBOARD_FACE_CAMERA_POS: puddle mask has same tiling as heigh map
-			#pragma shader_feature _ GEOM_TYPE_MESH BILLBOARD_FACE_CAMERA_POS
+			// Puddle Mask from vertex colors or height map? LOD_FADE_CROSSFADE: puddle mask has same tiling as heigh map
+			#pragma shader_feature _ GEOM_TYPE_MESH LOD_FADE_CROSSFADE
 			// Snow
 			#pragma shader_feature _ _SNOW
 
@@ -330,8 +330,8 @@ Shader "Lux Standard (Specular setup)"
 			// LOD_FADE_CROSSFADE
 			// Wetness
 			#pragma shader_feature _ _WETNESS_SIMPLE _WETNESS_RIPPLES _WETNESS_FLOW _WETNESS_FULL
-			// Puddle Mask from vertex colors or height map? BILLBOARD_FACE_CAMERA_POS: puddle mask has same tiling as heigh map
-			#pragma shader_feature _ GEOM_TYPE_MESH BILLBOARD_FACE_CAMERA_POS
+			// Puddle Mask from vertex colors or height map? LOD_FADE_CROSSFADE: puddle mask has same tiling as heigh map
+			#pragma shader_feature _ GEOM_TYPE_MESH LOD_FADE_CROSSFADE
 			// Snow
 			#pragma shader_feature _ _SNOW
 
@@ -382,8 +382,8 @@ Shader "Lux Standard (Specular setup)"
 			#pragma shader_feature _ EFFECT_BUMP
 			// Wetness
 			#pragma shader_feature _ _WETNESS_SIMPLE _WETNESS_RIPPLES _WETNESS_FLOW _WETNESS_FULL
-			// Puddle Mask from vertex colors or height map? BILLBOARD_FACE_CAMERA_POS: puddle mask has same tiling as heigh map
-			#pragma shader_feature _ GEOM_TYPE_MESH BILLBOARD_FACE_CAMERA_POS
+			// Puddle Mask from vertex colors or height map? LOD_FADE_CROSSFADE: puddle mask has same tiling as heigh map
+			#pragma shader_feature _ GEOM_TYPE_MESH LOD_FADE_CROSSFADE
 			// Snow
 			#pragma shader_feature _ _SNOW
 

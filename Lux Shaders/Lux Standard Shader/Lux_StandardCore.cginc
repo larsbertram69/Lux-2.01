@@ -380,7 +380,8 @@ inline FragmentCommonData FragmentSetup (LuxFragment lux)
         #if defined (GEOM_TYPE_MESH)
             lux.puddleMaskValue = tex2D (_ParallaxMap, lux.extrudedUV.xy * _PuddleMaskTiling).r; 
         // puddle mask from vertex color – else we take the already sampled value
-        #elif !defined(BILLBOARD_FACE_CAMERA_POS) && defined(_PARALLAXMAP)
+        //#elif !defined(BILLBOARD_FACE_CAMERA_POS) && defined(_PARALLAXMAP)
+        #elif !defined(LOD_FADE_CROSSFADE) && defined(_PARALLAXMAP)
             lux.puddleMaskValue = lux.vertexColor.g;
         #endif
     #endif

@@ -1150,19 +1150,22 @@ lighting = FindProperty("_Lighting", props, false);
 		switch (puddleMask) {
 			// vertex color
 			case 0:
-				material.DisableKeyword("GEOM_TYPE_MESH");
+				material.DisableKeyword("LOD_FADE_CROSSFADE");
+				material.DisableKeyword("GEOM_TYPE_MESH"); // GEOM_TYPE_MESH --> puddlemask from heightmap but using custom tiling
+//Debug.Log("vertexcol");
 				break;
 			// height map
 			case 1:
 				if (puddleMaskTiling == 1.0 && useParallax) {
 					material.DisableKeyword("GEOM_TYPE_MESH");
-					material.EnableKeyword("BILLBOARD_FACE_CAMERA_POS");
+					material.EnableKeyword("LOD_FADE_CROSSFADE");
 				}
 				else {
 					material.EnableKeyword("GEOM_TYPE_MESH");
 				}
 				break;
 		}
+		//material.DisableKeyword("BILLBOARD_FACE_CAMERA_POS");
 	}
 
 	public static void SetupMaterialWithSnowMode(Material material, int snow) {
@@ -1260,7 +1263,6 @@ lighting = FindProperty("_Lighting", props, false);
 
 			material.globalIlluminationFlags = flags;
 		}
-
 
 	}
 
