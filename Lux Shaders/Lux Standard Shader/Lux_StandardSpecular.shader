@@ -35,6 +35,7 @@ Shader "Lux Standard (Specular setup)"
 		// _Parallax ("Height Scale", Range (0.005, 0.08)) = 0.02
 		_ParallaxMap ("Height Map", 2D) = "black" {}
 		_ParallaxTiling ("Parallax Tiling", Float) = 1
+//		_UVRatio ("UV Ratio", Vector) = (1,1,0,0)
 		[Toggle(EFFECT_BUMP)] _UsePOM("Use POM", Float) = 0.0
 		_LinearSteps("Linear Steps", Range(4, 40.0)) = 20
 

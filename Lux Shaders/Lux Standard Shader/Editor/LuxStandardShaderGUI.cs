@@ -123,6 +123,7 @@ public static GUIContent combineMapText = new GUIContent("Combined Map", "Detail
 	MaterialProperty metallic2 = null;
 
 	MaterialProperty combinedMap = null;
+//	MaterialProperty UVRatio = null;
 	MaterialProperty usePOM = null;
 	MaterialProperty linearSteps = null;
 	MaterialProperty lighting = null;
@@ -230,9 +231,10 @@ public static GUIContent combineMapText = new GUIContent("Combined Map", "Detail
 
 
 		combinedMap = FindProperty ("_CombinedMap", props, false);
+//		UVRatio = FindProperty("_UVRatio", props);
 		usePOM = FindProperty ("_UsePOM", props);
 		linearSteps = FindProperty ("_LinearSteps", props);
-lighting = FindProperty("_Lighting", props, false);
+		lighting = FindProperty("_Lighting", props, false);
 
 		translucencyStrength = FindProperty("_TranslucencyStrength", props);
 		scatteringPower = FindProperty("_ScatteringPower", props);
@@ -485,6 +487,7 @@ lighting = FindProperty("_Lighting", props, false);
 				}
 				if (heightMap.textureValue != null ) {
 					m_MaterialEditor.ShaderProperty(heightMapTiling, "Parallax Tiling", MaterialEditor.kMiniTextureFieldLabelIndentLevel);
+//					m_MaterialEditor.ShaderProperty(UVRatio, "UV Ratio", MaterialEditor.kMiniTextureFieldLabelIndentLevel);
 					m_MaterialEditor.ShaderProperty(usePOM, "Enable POM", MaterialEditor.kMiniTextureFieldLabelIndentLevel);
 					if (usePOM.floatValue != 0.0f ) {
 

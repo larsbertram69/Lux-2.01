@@ -348,7 +348,7 @@ inline FragmentCommonData FragmentSetup (LuxFragment lux)
 
 //	Lux: Call custom parallax functions which handle mix mapping and return height, offset and extrudedUV
 	#if defined (_PARALLAXMAP)
-		lux.eyeVecTangent = normalize(lux.eyeVecTangent);
+		//lux.eyeVecTangent = normalize(lux.eyeVecTangent); // moved to include
 		#if defined(EFFECT_BUMP) && !defined (UNITY_PASS_META)
 			// Mixmapping
     		#if defined (GEOM_TYPE_BRANCH_DETAIL)
@@ -1042,6 +1042,10 @@ VertexOutputDeferred vertDeferred (LuxVertexInput v)
 	VertexOutputDeferred o;
 	UNITY_INITIALIZE_OUTPUT(VertexOutputDeferred, o);
 
+	// Fix for dynamic batching. Credits: Tomasz Stobierski 
+//	v.normal = normalize(v.normal);
+//	v.tangent.xyz = normalize(v.tangent.xyz);
+
 	float4 posWorld = mul(_Object2World, v.vertex);
 //	#if UNITY_SPECCUBE_BOX_PROJECTION
 		o.posWorld.xyz = posWorld;
@@ -1052,7 +1056,8 @@ VertexOutputDeferred vertDeferred (LuxVertexInput v)
 	o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 //	Lux
 	o.tex = LuxTexCoords(v);
-	o.eyeVec = NormalizePerVertexNormal(posWorld.xyz - _WorldSpaceCameraPos);
+//o.eyeVec = NormalizePerVertexNormal(posWorld.xyz - _WorldSpaceCameraPos);
+o.eyeVec = posWorld.xyz - _WorldSpaceCameraPos;
 	float3 normalWorld = UnityObjectToWorldNormal(v.normal);
 	#ifdef _TANGENT_TO_WORLD
 		float4 tangentWorld = float4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
@@ -1078,7 +1083,13 @@ VertexOutputDeferred vertDeferred (LuxVertexInput v)
 	#endif
 	
 	#ifdef _PARALLAXMAP
-		TANGENT_SPACE_ROTATION;
+		// Fix for dynamic batching. Credits: Tomasz Stobierski 
+		v.normal = normalize(v.normal);
+		v.tangent.xyz = normalize(v.tangent.xyz);
+		//TANGENT_SPACE_ROTATION;
+		float3 binormal = cross( v.normal, v.tangent.xyz ) * v.tangent.w;
+		float3x3 rotation = float3x3( v.tangent.xyz, binormal, v.normal );
+			
 		half3 viewDirForParallax = mul (rotation, ObjSpaceViewDir(v.vertex));
 		o.tangentToWorldAndParallax[0].w = viewDirForParallax.x;
 		o.tangentToWorldAndParallax[1].w = viewDirForParallax.y;

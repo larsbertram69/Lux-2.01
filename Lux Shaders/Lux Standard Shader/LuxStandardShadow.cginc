@@ -235,8 +235,9 @@ half4 fragShadowCaster (
 
 		//	//////////////////////////////////////////
 		//	Lux: Call custom parallax functions which handle mix mapping and return height and offset
-			
-			i.viewDirForParallax = normalize(i.viewDirForParallax);
+		
+		//	because we use inout	
+			half3 viewDirForParallax = normalize(i.viewDirForParallax) * facingFlip;
 			half puddleMaskDummy = 0;
 
 			#if defined(EFFECT_BUMP)
@@ -244,13 +245,13 @@ half4 fragShadowCaster (
 				detailBlendState *= detailBlendState;
 				// Mixmapping
 	    		#if defined (GEOM_TYPE_BRANCH_DETAIL)
-	            	Lux_SimplePOM_MixMap	(height, offset, i_tex, mixmapValue, puddleMaskDummy, i.viewDirForParallax * facingFlip, _LinearSteps, detailBlendState, _ParallaxMap);
+	            	Lux_SimplePOM_MixMap	(height, offset, i_tex, mixmapValue, puddleMaskDummy, viewDirForParallax, _LinearSteps, detailBlendState, _ParallaxMap);
 				// Regular blending
 				#else
-					Lux_SimplePOM 			(height, offset, i_tex, puddleMaskDummy, i.viewDirForParallax * facingFlip, _LinearSteps, detailBlendState, _ParallaxMap);
+					Lux_SimplePOM 			(height, offset, i_tex, puddleMaskDummy, viewDirForParallax, _LinearSteps, detailBlendState, _ParallaxMap);
 				#endif
 			#else
-				Lux_Parallax (height, offset, i_tex, mixmapValue, puddleMaskDummy, i.viewDirForParallax * facingFlip);
+				Lux_Parallax 				(height, offset, i_tex, mixmapValue, puddleMaskDummy, viewDirForParallax);
 			#endif
 		//	Finally tweak the uvs
 			i.tex = i_tex.xy;

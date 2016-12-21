@@ -4,11 +4,13 @@
 //  Additional Inputs ------------------------------------------------------------------
 
 half _ParallaxTiling;
+//half2 _UVRatio;
 
 #ifndef LUX_STANDARD_CORE_INCLUDED
 	float _Parallax;
 	sampler2D _ParallaxMap;
     float4 _ParallaxMap_ST;
+    float4 _ParallaxMap_TexelSize;
     #if defined (EFFECT_BUMP)
         float _LinearSteps;
     #endif
@@ -21,7 +23,7 @@ void Lux_Parallax (
     inout float4 i_tex,
     inout half2 mixmapValue,
     inout half puddleMaskValue,
-    half3 viewDir
+    inout half3 viewDir
     )
 {
 
@@ -29,9 +31,9 @@ void Lux_Parallax (
         // SM20: instruction count limitation
         // SM20: no parallax
         i_tex = i_tex;
-    
-    #else
 
+    #else
+        viewDir = normalize(viewDir);
         // Regular Detail Blending
         #if !defined(GEOM_TYPE_BRANCH_DETAIL)
             half2 heightAndPuddleMask = tex2D (_ParallaxMap, i_tex.xy * _ParallaxTiling).gr;
@@ -44,7 +46,16 @@ void Lux_Parallax (
                     float2 BaseToDetailFactor = 1;
                 #endif
                     offset = ParallaxOffset1Step (height, _Parallax, viewDir);
-                    offset *= _MainTex_ST.xy;
+                
+//            #if defined (LUX_STANDARD_CORE_INCLUDED)   
+//                    offset *= _MainTex_ST.xy;
+//            #endif
+                    // Lux standard shader corrects this already
+//                    #ifndef LUX_STANDARD_CORE_INCLUDED
+//                        offset /= _UVRatio.xy;
+//                    #endif
+
+
                     i_tex += float4(offset, offset * BaseToDetailFactor) / _ParallaxTiling;
                 // Get final height
                 #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
@@ -81,6 +92,10 @@ void Lux_Parallax (
             #if !defined(TESSELLATION_ON)
                 offset = ParallaxOffset1Step (height, _Parallax, viewDir);
                 offset *= _MainTex_ST.xy;
+                // Lux standard shader corrects this already
+//                #ifndef LUX_STANDARD_CORE_INCLUDED
+//                    offset /= _UVRatio.xy;
+//                #endif
                 i_tex += float4(offset, offset) / _ParallaxTiling;
                 // Get final height
                 #if defined (_WETNESS_SIMPLE) || defined (_WETNESS_RIPPLES) || defined (_WETNESS_FLOW) || defined (_WETNESS_FULL)
@@ -103,12 +118,12 @@ void Lux_SimplePOM (
     inout float2 offset,
     inout float4 uvIN,
     inout half puddleMaskValue,
-    half3 viewDir,
+    inout half3 viewDir,
     int POM_Linear_Steps,
     fixed detailBlendState,
     sampler2D heightmap )
 {
-
+    viewDir = normalize(viewDir);
     // Calculate the parallax offset vector max length.
     // This is equivalent to the tangent of the angle between the viewer position and the fragment location.
     float fParallaxLimit = -length( viewDir.xy ) / viewDir.z;
@@ -130,6 +145,7 @@ void Lux_SimplePOM (
     
     // Specify the view ray step size. Each sample will shift the current view ray by this amount.
     float2 fStepSize = 1.0 / (float)POM_Linear_Steps; //(float)nNumSamples;
+
 
     float4 uvScaled = uvIN * _ParallaxTiling;
 
@@ -158,7 +174,7 @@ void Lux_SimplePOM (
 
     float2 finalStepSize = fStepSize * vMaxOffset 
     #if !defined(TESSELLATION_ON) 
-        * _MainTex_ST.xy 
+        * _MainTex_ST.xy
     #endif
     ;
 
@@ -219,7 +235,7 @@ void Lux_SimplePOM (
 //  inout heigh             needs no "real" input, outputs height
 //  inout unIN              base uvs for texture1 and texture2
 //  inout mixmapValue       needs no "real" input, outputs the final mixmapValue
-//  in viewDir              viewDir in tangent space
+//  inout viewDir           viewDir in tangent space
 //  in POM_Linear_Steps     maximum number of samples in the height maps per pixel
 //  in heightmap            combined heightmaps (GA) and mask (B)
 
@@ -231,7 +247,7 @@ void Lux_SimplePOM_MixMap (
     inout float4 uvIN,
     inout half2 mixmapValue,
     inout half puddleMaskValue,
-    half3 viewDir,
+    inout half3 viewDir,
     int POM_Linear_Steps,
     fixed detailBlendState,
     sampler2D heightmap)
@@ -289,9 +305,9 @@ void Lux_SimplePOM_MixMap (
     float2 BaseToDetailFactor = uvIN.zw/uvIN.xy;
 
     float4 finalStepSize = fStepSize * vMaxOffset 
-    #if !defined(TESSELLATION_ON) 
-        * _MainTex_ST.xyxy 
-    #endif
+//    #if !defined(TESSELLATION_ON) 
+//        * _MainTex_ST.xyxy / _UVRatio.xyxy
+//    #endif
     * float4(1,1,BaseToDetailFactor);
 
 
@@ -299,7 +315,11 @@ void Lux_SimplePOM_MixMap (
 
     bool hit = false;
 
-    while ( nCurrSample < POM_Linear_Steps )
+    //while ( nCurrSample < POM_Linear_Steps )
+
+// for should be faster than while
+
+    for (int i = 0; i < POM_Linear_Steps; i++ )
     {
 
         // Using Mask texture
@@ -345,7 +365,8 @@ void Lux_SimplePOM_MixMap (
                     finalHeights = float2(h0, h1);
                 #endif
             // Force the exit of the while loop
-            nCurrSample = POM_Linear_Steps + 1;
+            // nCurrSample = POM_Linear_Steps + 1;
+            i = POM_Linear_Steps;
         }
         else
         {
@@ -360,6 +381,7 @@ void Lux_SimplePOM_MixMap (
             fLastSampledHeight = fCurrSampledHeight;
         }
     }
+
     if (!hit) {
         //fLastSampledHeight = saturate(fLastSampledHeight);
         vCurrOffset = float4(vMaxOffset.xyxy);
@@ -387,6 +409,143 @@ void Lux_SimplePOM_MixMap (
     // Set offset
     offset = vCurrOffset.xy; 
 }
+
+//  ---------------------------------------------------
+
+void Lux_SimplePOM_MixMapxxx(
+    inout half height,
+    inout float2 offset,
+    inout float4 uvIN,
+    inout half2 mixmapValue,
+    inout half puddleMaskValue,
+    inout half3 viewDir,
+    int POM_Linear_Steps,
+    fixed detailBlendState,
+    sampler2D heightmap)
+{
+
+    // disable mixmapping for now
+    mixmapValue = half2(1,0);
+
+    viewDir = normalize(viewDir);
+
+    // Calculate the texture coordinate partial derivatives in screen space for the tex2Dgrad texture sampling instruction.
+    float4 uvScaled = uvIN * _ParallaxTiling;
+    float4 dx = ddx( uvScaled.xyzw );
+    float4 dy = ddy( uvScaled.xyzw );
+
+
+//__________
+
+float slopeDamp = 1.0 - saturate (dot(viewDir, float3(0,0,1)));
+
+float3 Step = -viewDir.xyz;
+Step /= length( viewDir.xy ) * viewDir.z;
+Step *= float3(_Parallax.xx, 1) * (1.0 / (float)POM_Linear_Steps);
+// Fade out POM according to slope and detailBlendState
+Step.xy *= 1.0 - (slopeDamp * slopeDamp) * detailBlendState;
+
+// As we might have to deal with two different tilings here, we have to calculate the ratio between base and detail texture tiling and use it when offsetting.
+float2 BaseToDetailFactor = uvIN.zw/uvIN.xy;
+float2 Step2nd = Step.xy * BaseToDetailFactor;
+
+//___________
+
+
+
+    float3 CurrentUVs_and_Depth = float3(uvIN.xy, 1.001);
+    float2 Current2ndUVs = uvIN.zw;
+
+    float LastOffset = 0.0;
+    float LastSampledHeight = 1.001;
+    float CurrentSampledHeight = 1.0;
+    float CurrentSampledFinalHeight = 1.0;
+
+    half3 heightAndMask;
+
+    bool SampleIsBelowRay = false;
+    float h0;
+    float h1;
+
+
+    for (int i = 0; i < POM_Linear_Steps; i++, CurrentUVs_and_Depth.xyz += Step, Current2ndUVs += Step2nd) {
+        heightAndMask = tex2Dgrad(heightmap, CurrentUVs_and_Depth.xy, dx.xy, dy.xy).gbr;
+        h0 = heightAndMask.x;
+        h1 = tex2Dgrad(heightmap, Current2ndUVs, dx.zw, dy.zw).a;
+
+        // Adjust the mixmapValue when using Mask texture
+        #if defined(GEOM_TYPE_LEAF)
+            mixmapValue = half2(heightAndMask.y, 1.0 - heightAndMask.y);
+            mixmapValue = max( half2(0.0001, 0.0001), mixmapValue * float2(dot(h0, mixmapValue.x), dot(h1, mixmapValue.y)));
+            // one might skip it in the loop and do it at the end
+            mixmapValue *= mixmapValue;
+            mixmapValue *= mixmapValue;
+            mixmapValue = mixmapValue / dot(mixmapValue, half2(1.0, 1.0)); 
+        #endif
+        
+        CurrentSampledHeight = lerp(h0, h1, mixmapValue.y);
+         
+        if(CurrentSampledHeight > CurrentUVs_and_Depth.z ) {
+           SampleIsBelowRay = true;
+           break;
+        }
+        LastSampledHeight = CurrentSampledHeight;
+    }
+
+
+    if (SampleIsBelowRay) {
+
+        LastOffset = CurrentUVs_and_Depth.z - LastSampledHeight - Step.z;
+        float slope = 1.0 - LastOffset / ((CurrentSampledHeight - LastSampledHeight) - Step.z);
+        // Get new sampling position according to slope
+        CurrentUVs_and_Depth.xyz -= Step * slope;
+        Current2ndUVs -= Step2nd * slope;
+        
+        heightAndMask = tex2Dgrad(heightmap, CurrentUVs_and_Depth.xy, dx.xy, dy.xy).gbr;
+        h0 = heightAndMask.x;
+        h1 = tex2Dgrad(heightmap, Current2ndUVs, dx.zw, dy.zw).a;
+
+        // Adjust the mixmapValue when using Mask texture
+        #if defined(GEOM_TYPE_LEAF)
+            mixmapValue = half2(heightAndMask.y, 1.0 - heightAndMask.y);
+            mixmapValue = max( half2(0.0001, 0.0001), mixmapValue * float2(dot(h0, mixmapValue.x), dot(h1, mixmapValue.y)));
+            mixmapValue *= mixmapValue;
+            mixmapValue *= mixmapValue;
+            mixmapValue = mixmapValue / dot(mixmapValue, half2(1.0, 1.0)); 
+        #endif
+        
+        CurrentSampledFinalHeight = lerp(h0, h1, mixmapValue.y);
+
+        // Step forwards
+        if (CurrentSampledFinalHeight <= CurrentUVs_and_Depth.z) {
+            Step *= slope;
+            LastOffset = CurrentUVs_and_Depth.z - CurrentSampledFinalHeight;
+            slope = LastOffset / ((CurrentSampledHeight - CurrentSampledFinalHeight) - Step.z);
+            CurrentUVs_and_Depth += Step * slope;
+        } 
+        
+        // Step backwards
+        else {
+            Step *= 1.0 - slope;
+            slope = 1.0 - LastOffset / ((CurrentSampledFinalHeight - LastSampledHeight) - Step.z);
+            CurrentUVs_and_Depth.xyz -= Step * slope;
+        }
+        
+    }
+
+
+//    else {
+//       CurrentUVs_and_Depth.xy = vOffsetDir.xy * fParallaxLimit * _Parallax;  
+//    }
+
+    // Set offset
+    uvIN = float4(CurrentUVs_and_Depth.xy, CurrentUVs_and_Depth.xy * BaseToDetailFactor); // Current2ndUVs); 
+
+
+}
+
+
+
 #endif
 
 
@@ -397,12 +556,12 @@ void Lux_SimplePOM_MixMap (
     // Mixmapping
     #if defined (GEOM_TYPE_BRANCH_DETAIL)
         #define LUX_PARALLAX \
-            Lux_SimplePOM_MixMap (lux.height, lux.offset, lux.extrudedUV, lux.mixmapValue, lux.puddleMaskValue, normalize(lux.eyeVecTangent), _LinearSteps, lux.detailBlendState, _ParallaxMap); \
+            Lux_SimplePOM_MixMap (lux.height, lux.offset, lux.extrudedUV, lux.mixmapValue, lux.puddleMaskValue, lux.eyeVecTangent, _LinearSteps, lux.detailBlendState, _ParallaxMap); \
             lux.finalUV = lux.extrudedUV;
     // Regular blending 
     #else
         #define LUX_PARALLAX \
-            Lux_SimplePOM (lux.height, lux.offset, lux.extrudedUV, lux.puddleMaskValue, normalize(lux.eyeVecTangent), _LinearSteps, lux.detailBlendState, _ParallaxMap); \
+            Lux_SimplePOM (lux.height, lux.offset, lux.extrudedUV, lux.puddleMaskValue, lux.eyeVecTangent, _LinearSteps, lux.detailBlendState, _ParallaxMap); \
             lux.finalUV = lux.extrudedUV;
 
          #define LUX_PARALLAX_SCALED \
