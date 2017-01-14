@@ -163,7 +163,7 @@ void Lux_SimplePOM (
     float fLastSampledHeight = 1;
     float fCurrSampledHeight = 1;
 
-    int nCurrSample = 0;
+    // int nCurrSample = 0;
 
     float h0;
     float h1;
@@ -179,8 +179,8 @@ void Lux_SimplePOM (
     ;
 
     bool hit = false;
-
-    while ( nCurrSample < POM_Linear_Steps )
+    //while ( nCurrSample < POM_Linear_Steps )
+    UNITY_LOOP for (int i = 0; i < POM_Linear_Steps; i++ )
     {
         // Sample the heightmap at the current texcoord offset.
         fCurrSampledHeight = tex2Dgrad(heightmap, uvScaled.xy + vCurrOffset, dx.xy, dy.xy ).g;
@@ -198,13 +198,14 @@ void Lux_SimplePOM (
                 fLastSampledHeight = (ratio) * fLastSampledHeight + (1.0-ratio) * fCurrSampledHeight;
                 hit = true;
             // Force the exit of the while loop
-            nCurrSample = POM_Linear_Steps + 1;
+            // nCurrSample = POM_Linear_Steps + 1;
+            break;
         }
         else
         {
             // The intersection was not found.
             // Now set up the loop for the next iteration by incrementing the sample count,
-            nCurrSample++;
+            // nCurrSample++;
             // take the next view ray height step,
             fCurrRayHeight -= fStepSize;
             // save the current texture coordinate offset and increment to the next sample location, 
@@ -292,7 +293,7 @@ void Lux_SimplePOM_MixMap (
     float fLastSampledHeight = 1.0;
     float fCurrSampledHeight = 1.0;
 
-    int nCurrSample = 0;
+    //int nCurrSample = 0;
 
     #if defined(GEOM_TYPE_LEAF)
         half3 heightAndMask;
@@ -314,12 +315,7 @@ void Lux_SimplePOM_MixMap (
     float2 finalHeights = float2(1.0, 1.0);
 
     bool hit = false;
-
-    //while ( nCurrSample < POM_Linear_Steps )
-
-// for should be faster than while
-
-    for (int i = 0; i < POM_Linear_Steps; i++ )
+    UNITY_LOOP for (int i = 0; i < POM_Linear_Steps; i++ )
     {
 
         // Using Mask texture
@@ -366,12 +362,12 @@ void Lux_SimplePOM_MixMap (
                 #endif
             // Force the exit of the while loop
             // nCurrSample = POM_Linear_Steps + 1;
-            i = POM_Linear_Steps;
+            break;
         }
         else
         {
             // The intersection was not found. Now set up the loop for the next iteration by incrementing the sample count,
-            nCurrSample++;
+            // nCurrSample++;
             // take the next view ray height step,
             fCurrRayHeight -= fStepSize;
             // save the current texture coordinate offset and increment to the next sample location, 
@@ -409,142 +405,6 @@ void Lux_SimplePOM_MixMap (
     // Set offset
     offset = vCurrOffset.xy; 
 }
-
-//  ---------------------------------------------------
-
-void Lux_SimplePOM_MixMapxxx(
-    inout half height,
-    inout float2 offset,
-    inout float4 uvIN,
-    inout half2 mixmapValue,
-    inout half puddleMaskValue,
-    inout half3 viewDir,
-    int POM_Linear_Steps,
-    fixed detailBlendState,
-    sampler2D heightmap)
-{
-
-    // disable mixmapping for now
-    mixmapValue = half2(1,0);
-
-    viewDir = normalize(viewDir);
-
-    // Calculate the texture coordinate partial derivatives in screen space for the tex2Dgrad texture sampling instruction.
-    float4 uvScaled = uvIN * _ParallaxTiling;
-    float4 dx = ddx( uvScaled.xyzw );
-    float4 dy = ddy( uvScaled.xyzw );
-
-
-//__________
-
-float slopeDamp = 1.0 - saturate (dot(viewDir, float3(0,0,1)));
-
-float3 Step = -viewDir.xyz;
-Step /= length( viewDir.xy ) * viewDir.z;
-Step *= float3(_Parallax.xx, 1) * (1.0 / (float)POM_Linear_Steps);
-// Fade out POM according to slope and detailBlendState
-Step.xy *= 1.0 - (slopeDamp * slopeDamp) * detailBlendState;
-
-// As we might have to deal with two different tilings here, we have to calculate the ratio between base and detail texture tiling and use it when offsetting.
-float2 BaseToDetailFactor = uvIN.zw/uvIN.xy;
-float2 Step2nd = Step.xy * BaseToDetailFactor;
-
-//___________
-
-
-
-    float3 CurrentUVs_and_Depth = float3(uvIN.xy, 1.001);
-    float2 Current2ndUVs = uvIN.zw;
-
-    float LastOffset = 0.0;
-    float LastSampledHeight = 1.001;
-    float CurrentSampledHeight = 1.0;
-    float CurrentSampledFinalHeight = 1.0;
-
-    half3 heightAndMask;
-
-    bool SampleIsBelowRay = false;
-    float h0;
-    float h1;
-
-
-    for (int i = 0; i < POM_Linear_Steps; i++, CurrentUVs_and_Depth.xyz += Step, Current2ndUVs += Step2nd) {
-        heightAndMask = tex2Dgrad(heightmap, CurrentUVs_and_Depth.xy, dx.xy, dy.xy).gbr;
-        h0 = heightAndMask.x;
-        h1 = tex2Dgrad(heightmap, Current2ndUVs, dx.zw, dy.zw).a;
-
-        // Adjust the mixmapValue when using Mask texture
-        #if defined(GEOM_TYPE_LEAF)
-            mixmapValue = half2(heightAndMask.y, 1.0 - heightAndMask.y);
-            mixmapValue = max( half2(0.0001, 0.0001), mixmapValue * float2(dot(h0, mixmapValue.x), dot(h1, mixmapValue.y)));
-            // one might skip it in the loop and do it at the end
-            mixmapValue *= mixmapValue;
-            mixmapValue *= mixmapValue;
-            mixmapValue = mixmapValue / dot(mixmapValue, half2(1.0, 1.0)); 
-        #endif
-        
-        CurrentSampledHeight = lerp(h0, h1, mixmapValue.y);
-         
-        if(CurrentSampledHeight > CurrentUVs_and_Depth.z ) {
-           SampleIsBelowRay = true;
-           break;
-        }
-        LastSampledHeight = CurrentSampledHeight;
-    }
-
-
-    if (SampleIsBelowRay) {
-
-        LastOffset = CurrentUVs_and_Depth.z - LastSampledHeight - Step.z;
-        float slope = 1.0 - LastOffset / ((CurrentSampledHeight - LastSampledHeight) - Step.z);
-        // Get new sampling position according to slope
-        CurrentUVs_and_Depth.xyz -= Step * slope;
-        Current2ndUVs -= Step2nd * slope;
-        
-        heightAndMask = tex2Dgrad(heightmap, CurrentUVs_and_Depth.xy, dx.xy, dy.xy).gbr;
-        h0 = heightAndMask.x;
-        h1 = tex2Dgrad(heightmap, Current2ndUVs, dx.zw, dy.zw).a;
-
-        // Adjust the mixmapValue when using Mask texture
-        #if defined(GEOM_TYPE_LEAF)
-            mixmapValue = half2(heightAndMask.y, 1.0 - heightAndMask.y);
-            mixmapValue = max( half2(0.0001, 0.0001), mixmapValue * float2(dot(h0, mixmapValue.x), dot(h1, mixmapValue.y)));
-            mixmapValue *= mixmapValue;
-            mixmapValue *= mixmapValue;
-            mixmapValue = mixmapValue / dot(mixmapValue, half2(1.0, 1.0)); 
-        #endif
-        
-        CurrentSampledFinalHeight = lerp(h0, h1, mixmapValue.y);
-
-        // Step forwards
-        if (CurrentSampledFinalHeight <= CurrentUVs_and_Depth.z) {
-            Step *= slope;
-            LastOffset = CurrentUVs_and_Depth.z - CurrentSampledFinalHeight;
-            slope = LastOffset / ((CurrentSampledHeight - CurrentSampledFinalHeight) - Step.z);
-            CurrentUVs_and_Depth += Step * slope;
-        } 
-        
-        // Step backwards
-        else {
-            Step *= 1.0 - slope;
-            slope = 1.0 - LastOffset / ((CurrentSampledFinalHeight - LastSampledHeight) - Step.z);
-            CurrentUVs_and_Depth.xyz -= Step * slope;
-        }
-        
-    }
-
-
-//    else {
-//       CurrentUVs_and_Depth.xy = vOffsetDir.xy * fParallaxLimit * _Parallax;  
-//    }
-
-    // Set offset
-    uvIN = float4(CurrentUVs_and_Depth.xy, CurrentUVs_and_Depth.xy * BaseToDetailFactor); // Current2ndUVs); 
-
-
-}
-
-
 
 #endif
 

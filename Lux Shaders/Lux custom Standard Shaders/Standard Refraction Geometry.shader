@@ -25,6 +25,7 @@
 
 	//	We declare a specific "_GrabTexture" which can be used by other objects or materials as well
 		GrabPass{ "_GrabTexture" }
+	//	GrabPass{ }
 		
 		CGPROGRAM
 		#pragma surface surf LuxStandardSpecular fullforwardshadows vertex:vert

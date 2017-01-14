@@ -99,7 +99,7 @@ public float SnowMelt = 0.0f;
 	[Space(10)]
 	public ParticleSystem SnowParticleSystem;
 	private ParticleSystem.EmissionModule SnowEmissionModule;
-	public int MaxSnowParticlesEmissionRate = 3000;
+	public int MaxSnowParticlesEmissionRate = 200;
 
 	[Header("Rain")]
 	public Texture2D RainRipples;
@@ -111,7 +111,7 @@ public float SnowMelt = 0.0f;
 	[Space(10)]
 	public ParticleSystem RainParticleSystem;
 	private ParticleSystem.EmissionModule RainEmissionModule;
-	public int MaxRainParticlesEmissionRate = 3000;
+	public int MaxRainParticlesEmissionRate = 200;
 
 [Header("GI")]
 	[Tooltip("When using dynamic GI you may attach one renderer per GI System in order to make GI being synced automatically to the given amount of snow.")]
@@ -236,10 +236,20 @@ public float SnowMelt = 0.0f;
 			}
 		}
 		if(SnowParticleSystem != null) {
-			SnowEmissionModule.rate = new ParticleSystem.MinMaxCurve(MaxSnowParticlesEmissionRate * SnowIntensity);	
+			#if UNITY_5_5_OR_NEWER
+				var SnowEmission = SnowParticleSystem.emission;
+				SnowEmission.rateOverTimeMultiplier = MaxSnowParticlesEmissionRate * SnowIntensity;
+			#else
+				SnowEmissionModule.rate = new ParticleSystem.MinMaxCurve(MaxSnowParticlesEmissionRate * SnowIntensity);
+			#endif
 		}
 		if(RainParticleSystem != null) {
-			RainEmissionModule.rate = new ParticleSystem.MinMaxCurve(MaxRainParticlesEmissionRate * RainIntensity);	
+			#if UNITY_5_5_OR_NEWER
+				var RainEmission = RainParticleSystem.emission;
+				RainEmission.rateOverTimeMultiplier = MaxRainParticlesEmissionRate * RainIntensity;
+			#else
+				RainEmissionModule.rate = new ParticleSystem.MinMaxCurve(MaxRainParticlesEmissionRate * RainIntensity);
+			#endif
 		}
 	}
 }

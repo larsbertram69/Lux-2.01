@@ -24,10 +24,12 @@
 		[Space(4)]
 		[NoScaleOffset] _ParallaxMap ("Height (G) (Mix Mapping: Height2 (A) Mix Map (B)) PuddleMask (R)", 2D) = "white" {}
 		_ParallaxTiling ("Parallax Tiling", Float) = 1
+
+		// [Lux_TextureTilingDrawer] _UVRatio ("UV Ratio", Vector) = (1,1,0,0)
 		_Parallax ("Height Scale", Range (0.005, 0.1)) = 0.02
 		[Space(4)]
 		[Toggle(EFFECT_BUMP)] _EnablePOM("Enable POM", Float) = 0.0
-		_LinearSteps("- Linear Steps", Range(4, 40.0)) = 20
+		_LinearSteps("- Linear Steps", Range(4, 256.0)) = 20
 
 		// Lux dynamic weather properties
 		[Space(4)]
@@ -140,6 +142,7 @@
 			o.lux_worldPosDistance.w = distance(_WorldSpaceCameraPos, worldPosition);
 		}
 
+
 		void surf (Input IN, inout SurfaceOutputLuxStandardSpecular o) {
 			
 			// Initialize the Lux fragment structure. Always do this first.
@@ -179,10 +182,11 @@
 			o.Alpha = 1;
 		//  ///////////////////////////////
 
-			// Apply dynamic water and snow
+			// Apply dynamic water and snow		
 			LUX_APPLY_DYNAMICWEATHER
 			// Then add diffuse scattering
 			LUX_DIFFUSESCATTERING(o.Albedo, o.Normal, IN.viewDir)
+
 
 		}
 		ENDCG

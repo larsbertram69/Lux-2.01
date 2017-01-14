@@ -27,6 +27,10 @@
 		[NoScaleOffset] _ParallaxMap ("Height (G) (Mix Mapping: Height2 (A) Mix Map (B)) PuddleMask (R)", 2D) = "white" {}
 		_ParallaxTiling ("Parallax Tiling", Float) = 1
 		_Parallax ("Height Scale", Range (0.005, 0.1)) = 0.02
+
+		//[Lux_TextureTilingDrawer] _UVRatio ("UV Ratio", Vector) = (1,1,0,0)
+
+
 		[Space(4)]
 		[Toggle(EFFECT_BUMP)] _EnablePOM("Enable POM", Float) = 0.0
 		_LinearSteps("- Linear Steps", Range(4, 40.0)) = 20
@@ -101,7 +105,7 @@
 		#define GEOM_TYPE_LEAF
 		// Enable snow
 		#define _SNOW
-		// Eanable full wetmess
+		// Enable full wetness
 		#define _WETNESS_FULL
 		// As the shader supports double sided geometry
 		#define EFFECT_HUE_VARIATION

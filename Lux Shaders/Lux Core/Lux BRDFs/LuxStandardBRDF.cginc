@@ -23,12 +23,14 @@
 		#if UNITY_VERSION >= 550
 			half perceptualRoughness = SmoothnessToPerceptualRoughness (smoothness);
 			half roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
+			half nl = saturate(dot(normal, light.dir));
 		#else
 			half roughness = 1-smoothness;
+			half nl = light.ndotl;
 		#endif
 
 		light.color *= shadow;
-		half nl = light.ndotl;
+		
 
 		// BRDF expects all other inputs to be calculated up front!
 		#if defined (UNITY_PASS_FORWARDBASE) || defined(UNITY_PASS_FORWARDADD)
