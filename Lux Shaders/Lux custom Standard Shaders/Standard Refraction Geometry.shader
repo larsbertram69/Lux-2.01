@@ -1,4 +1,8 @@
-﻿Shader "Lux/Standard Lighting/Refractive/Geometry Refraction" {
+﻿// Patch 5.5.0p3
+// Graphics: Fixed an issue where grab pass could cause lighting to break on translucent objects in a scene.
+
+
+Shader "Lux/Standard Lighting/Refractive/Geometry Refraction" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
@@ -83,9 +87,7 @@
 			half4 normalSample = tex2D(_BumpMap, IN.lux_uv_MainTex.xy);
 			o.Normal = UnpackNormal(normalSample);
 
-			half3 wNormal = WorldNormalVector(IN, float3(0, 0, 1));
-			float3 worldViewDir = normalize (IN.worldPos - _WorldSpaceCameraPos.xyz);
-			float NdotV = dot(worldViewDir, wNormal);
+			float NdotV = dot(normalize(IN.viewDir), float3(0, 0, 1));
 			
 			float4 distortedGrabUVs = IN.grabUV;
 			half3 viewSpaceNormal = normalize(IN.viewSpaceNormal_ProjPos.xyz) * ( 1.0 - NdotV*NdotV);
