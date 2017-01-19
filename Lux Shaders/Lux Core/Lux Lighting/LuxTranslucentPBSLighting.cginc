@@ -164,7 +164,7 @@ inline half4 LightingLuxTranslucentSpecular (SurfaceOutputLuxTranslucentSpecular
 //	Real time lighting uses the Lux BRDF
 	half4 c = Lux_BRDF1_PBS (s.Albedo, s.Specular, oneMinusReflectivity, s.Smoothness, s.Normal, viewDir,
 				// Deferred expects these inputs to be calculates up front, forward does not. So we simply fill the input struct with zeros.
-				half3(0, 0, 0), 0, 0, 0, 0,
+				half3(0.0h,0.0h,0.0h), 0.0h, 0.0h, 0.0h, 0.0h,
 				ndotlDiffuse,
 				gi.light, gi.indirect, specularIntensity, s.Shadow);
 

@@ -6,6 +6,8 @@
 #include "UnityLightingCommon.cginc"
 #include "UnityGlobalIllumination.cginc"
 
+#define LUX_PERSONAL
+
 #include "../Lux Core/Lux Lighting/LuxAreaLights.cginc"
 #include "../Lux Core/Lux BRDFs/LuxSkinBRDF.cginc"
 #include "../Lux Core/Lux Utils/LuxUtils.cginc"
@@ -151,7 +153,7 @@ inline half4 LightingLuxSkinSpecular (SurfaceOutputLuxSkinSpecular s, half3 view
 //	Real time lighting uses the Lux Skin BRDF
 	half4 c = LUX_SKIN_BRDF(s.Albedo, s.Specular, s.Translucency, oneMinusReflectivity, s.Smoothness, s.Normal, diffuseNormal, viewDir,
 		// Deferred expects these inputs to be calculates up front, forward does not. So we simply fill the input struct with zeros.
-		half3(0,0,0), 0, 0, 0, 0,
+		half3(0.0h,0.0h,0.0h), 0.0h, 0.0h, 0.0h, 0.0h,
 		diffuseLightDir,
 		ndotlDiffuse,
 		s.Curvature,

@@ -30,7 +30,8 @@ half3 BentNormalsDiffuseLighting(float3 normal, float3 blurredNormal, float3 L, 
 
 half4 LUX_SKIN_BRDF (half3 diffColor, half3 specColor, half translucency, half oneMinusReflectivity, half smoothness /*oneMinusRoughness*/,
 	half3 normal, half3 blurredNormalWorld, half3 viewDir,
-	half3 halfDir, half nh, half nv, half lv, half lh,
+//	that crashes in Unity 5.4. compiling for metal
+half3 halfDir, half nh, half nv, half lv, half lh,
 	half3 diffuseLightDir,
 	half dotNL_diffuse,
 	fixed curvature,
@@ -50,7 +51,7 @@ half4 LUX_SKIN_BRDF (half3 diffColor, half3 specColor, half translucency, half o
 
 	light.color *= shadow;
 
-	// BRDF expects all other inputs to be calculated up front!
+//	In deferred BRDF expects all other inputs to be calculated up front!
 	#if defined (UNITY_PASS_FORWARDBASE) || defined(UNITY_PASS_FORWARDADD)
 		halfDir = normalize(light.dir + viewDir);
 		nh = BlinnTerm(normal, halfDir);

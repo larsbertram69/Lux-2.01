@@ -136,14 +136,12 @@ inline half4 LightingLuxAnisoMetallic (SurfaceOutputLuxAnisoMetallic s, half3 vi
 	half3 specColor;
 	s.Albedo = DiffuseAndSpecularFromMetallic (s.Albedo, s.Metallic, /*out*/ specColor, /*out*/ oneMinusReflectivity);
 
-// ??? aber dann brauchen wir metallic nicht mehr als trans maske...
+	// ??? aber dann brauchen wir metallic nicht mehr als trans maske...
 fixed3 diffColor = s.Albedo;
 
 	// shader relies on pre-multiply alpha-blend (_SrcBlend = One, _DstBlend = OneMinusSrcAlpha)
 	// this is necessary to handle transparency in physically correct way - only diffuse component gets affected by alpha
 	half outputAlpha;
-
-
 
 	s.Albedo = PreMultiplyAlpha (s.Albedo, s.Alpha, oneMinusReflectivity, /*out*/ outputAlpha);
 
@@ -175,12 +173,12 @@ fixed3 diffColor = s.Albedo;
 //	///////////////////////////////////////	
 //	Direct lighting uses the Lux BRDF
 	half4 c = Lux_ANISO_BRDF (s.Albedo, specColor, oneMinusReflectivity, s.Smoothness, s.Normal, viewDir,
-				half3(0, 0, 0), 0, 0, 0, 0,
-				//s.worldTangentDir, 1.0 - s.SmoothnessX, 1.0 - s.SmoothnessY,
+				half3(0.0h,0.0h,0.0h), 0.0h, 0.0h, 0.0h, 0.0h,
 				s.worldTangentDir, 1.0 - s.Smoothness, 1.0,
 				ndotlDiffuse,
 				gi.light, gi.indirect, specularIntensity, s.Shadow);
 //	///////////////////////////////////////
+
 	UNITY_BRANCH
 	if (s.Translucency > 0) {
 		// https://colinbarrebrisebois.com/2012/04/09/approximating-translucency-revisited-with-simplified-spherical-gaussian/

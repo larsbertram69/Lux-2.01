@@ -22,7 +22,11 @@
 //	Brent, Burley, "Physically-Based Shading at Disney", 2012
 //-------------------------------------------------------------------------------------
 
+
+
+
 	half4 Lux_ANISO_BRDF (half3 diffColor, half3 specColor, half oneMinusReflectivity, half smoothness /*oneMinusRoughness*/, half3 normal, half3 viewDir,
+		// This breaks metal in Unity 5.4.x...
 		half3 halfDir, half nh, half nv, half lv, half lh,
 		half3 worldTangentDir, half RoughnessX, half RoughnessY,
 		half nl_diffuse,
@@ -45,11 +49,11 @@
 
 		// BRDF expects all other inputs to be calculated up front!
 		#if defined (UNITY_PASS_FORWARDBASE) || defined(UNITY_PASS_FORWARDADD)
-			halfDir = normalize (light.dir + viewDir);
-			nh = BlinnTerm (normal, halfDir);
-			nv = DotClamped (normal, viewDir);
-			lv = DotClamped (light.dir, viewDir);
-			lh = DotClamped (light.dir, halfDir);
+				halfDir = normalize (light.dir + viewDir);
+				nh = BlinnTerm (normal, halfDir);
+				nv = DotClamped (normal, viewDir);
+				lv = DotClamped (light.dir, viewDir);
+				lh = DotClamped (light.dir, halfDir);
 		#endif
 
 		float3 X = worldTangentDir.xyz;

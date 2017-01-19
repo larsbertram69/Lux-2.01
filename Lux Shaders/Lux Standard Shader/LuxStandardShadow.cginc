@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
 #ifndef LUX_STANDARD_SHADOW_INCLUDED
 #define LUX_STANDARD_SHADOW_INCLUDED
 
@@ -96,7 +98,7 @@ struct VertexInput
 	#if defined (_PARALLAXMAP)
 		// Mix Mapping?
 		#if defined (GEOM_TYPE_BRANCH_DETAIL)
-			float uv1 : TEXCOORD1;
+			float2 uv1 : TEXCOORD1;
 			// Mixmapping defined by vertex colors?
 			#if !defined(GEOM_TYPE_LEAF)
 				fixed4 color : COLOR0;
@@ -156,13 +158,13 @@ void vertShadowCaster (VertexInput v,
 			o.viewDirForParallax = viewDirForParallax;
 			// Mix Mapping?
 			#if defined (GEOM_TYPE_BRANCH_DETAIL)
-				o.tex2 = TRANSFORM_TEX(((_UVSec == 0) ? v.uv0 : v.uv1), _DetailAlbedoMap);
+				o.tex2 = TRANSFORM_TEX(((_UVSec == 0.0) ? v.uv0 : v.uv1), _DetailAlbedoMap);
 			#endif
 			// Mixmapping defined by vertex colors?
 			#if defined (GEOM_TYPE_BRANCH_DETAIL) && !defined(GEOM_TYPE_LEAF)
 				o.color = v.color;
 			#endif
-			float4 posWorld = mul(_Object2World, v.vertex);
+			float4 posWorld = mul(unity_ObjectToWorld, v.vertex);
 			o.posWorld.xyz = posWorld.xyz;
 			o.posWorld.w = distance(_WorldSpaceCameraPos, posWorld);
 		#endif
@@ -186,7 +188,7 @@ half4 fragShadowCaster (
 {
 	#if defined(UNITY_STANDARD_USE_SHADOW_UVS)
 
-		float3 facingFlip = float3(1.0, 1.0, 1.0);
+		float3 facingFlip = float3(1.0f, 1.0f, 1.0f);
 		//	Lux: VFACE
 		#if defined(EFFECT_HUE_VARIATION)
 			#if UNITY_VFACE_FLIPPED
@@ -195,30 +197,30 @@ half4 fragShadowCaster (
 			#if UNITY_VFACE_AFFECTED_BY_PROJECTION
 				facing *= _ProjectionParams.x; // take possible upside down rendering into account
 		  	#endif
-		  	facingFlip = half3( 1.0, 1.0, facing);
+		  	facingFlip = float3( 1.0f, 1.0f, facing);
 		#endif
 
 		#if defined (_PARALLAXMAP)
 
-			float4 i_tex = float4(i.tex.xy, 0,0);
-			half height = 0.25;
-			float2 offset = 0.0;
+			float4 i_tex = float4(i.tex.xy, 0.0f, 0.0f);
+			half height = 0.25h;
+			float2 offset = 0.0h;
 
 			//	//////////////////////////////////////////
 			//	Lux: Get the Mix Map Blend value
 			//	We do regular detail blending – so just set the mixmapValue accordingly.
 			#if !defined (GEOM_TYPE_BRANCH_DETAIL)
-				half2 mixmapValue = half2(1, 0);
+				half2 mixmapValue = half2(1.0h, 0.0h);
 			//	We use Mix Mapping
 			#else
 				//	Set uvs for 2nd texture
 				i_tex.zw = i.tex2.xy;
 				#if !defined(GEOM_TYPE_LEAF)
 				//	Using Vertex Color Red
-					half2 mixmapValue = half2(i.color.r, 1.0 - i.color.r);
+					half2 mixmapValue = half2(i.color.r, 1.0h - i.color.r);
 				#else
 				//	Using Mask Texture / Only Parallax Mapping needs the Mask, POM samples it itself
-					half mixmap = 0;
+					half mixmap = 0.0h;
 					#if defined (_PARALLAXMAP) && !defined(EFFECT_BUMP)
 						//	Read mixmap and first height in a single lookup
 						half2 heightMix = tex2D (_ParallaxMap, i.tex.xy).gb;
@@ -229,7 +231,7 @@ half4 fragShadowCaster (
 //					#else
 //						mixmap = tex2D (_DetailMask, i.tex.xy).g;
 					#endif
-					half2 mixmapValue = half2(mixmap, 1.0 - mixmap);
+					half2 mixmapValue = half2(mixmap, 1.0h - mixmap);
 				#endif
 			#endif
 
@@ -238,7 +240,7 @@ half4 fragShadowCaster (
 		
 		//	because we use inout	
 			half3 viewDirForParallax = normalize(i.viewDirForParallax) * facingFlip;
-			half puddleMaskDummy = 0;
+			half puddleMaskDummy = 0.0h;
 
 			#if defined(EFFECT_BUMP)
 				float detailBlendState = saturate( (_Lux_DetailDistanceFade.x - i.posWorld.w) / _Lux_DetailDistanceFade.y);
@@ -268,12 +270,12 @@ half4 fragShadowCaster (
 			#if defined(UNITY_STANDARD_USE_DITHER_MASK)
 				// Use dither mask for alpha blended shadows, based on pixel position xy
 				// and alpha level. Our dither texture is 4x4x16.
-				half alphaRef = tex3D(_DitherMaskLOD, float3(vpos.xy*0.25,alpha*0.9375)).a;
+				half alphaRef = tex3D(_DitherMaskLOD, float3(vpos.xy*0.25f,alpha*0.9375f)).a;
 
 					// We have to distinguish between depth and shadow pass (forward rendering) / unity_LightShadowBias is (0,0,0,0) when rendering depth in forward
 				//	alphaRef = ( dot(unity_LightShadowBias, 1.0) == 0.0 ) ? 1.0 : alphaRef;
 
-				clip (alphaRef - 0.01);
+				clip (alphaRef - 0.01h);
 			#else
 				clip (alpha - _Cutoff);
 			#endif
